@@ -1,3 +1,0 @@
-[console_scripts]
-sd = standdown.__main__:main
-standdown = standdown.__main__:main
