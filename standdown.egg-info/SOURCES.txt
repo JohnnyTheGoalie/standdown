@@ -1,0 +1,9 @@
+setup.py
+standdown/__init__.py
+standdown/__main__.py
+standdown/connect.py
+standdown.egg-info/PKG-INFO
+standdown.egg-info/SOURCES.txt
+standdown.egg-info/dependency_links.txt
+standdown.egg-info/entry_points.txt
+standdown.egg-info/top_level.txt
