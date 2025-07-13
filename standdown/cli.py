@@ -5,12 +5,14 @@ from urllib import request
 
 import uvicorn
 from standdown import server
+
 from .config import (
     save_server,
     load_server,
     save_login,
     DEFAULT_PORT,
 )
+
 
 
 def connect(address: str):
@@ -26,7 +28,10 @@ def connect(address: str):
         port = DEFAULT_PORT
 
     save_server(host, port)
-    print(f"[CLIENT] Set server to {host}:{port}")
+    if port == DEFAULT_PORT:
+        print(f"[CLIENT] Routing requests to {host}")
+    else:
+        print(f"[CLIENT] Routing requests to {host}:{port}")
 
 def start_server(port: int = DEFAULT_PORT):
     print(f"[SERVER] Starting standdown FastAPI server on port {port}")
@@ -59,6 +64,7 @@ def create_team_cli(name: str, admin_password: str):
             print(f"[ERROR] {exc}")
 
 
+
 def signup_cli(teamname: str, admin_password: str, usernames: list[str], password: str):
     """Send a request to add users to a team."""
     address, port = load_server()
@@ -88,6 +94,7 @@ def signup_cli(teamname: str, admin_password: str, usernames: list[str], passwor
             print(f"[ERROR] {exc}")
 
 
+
 def login_cli(teamname: str, username: str, password: str):
     """Login a user and store the returned token."""
     address, port = load_server()
@@ -109,7 +116,9 @@ def login_cli(teamname: str, username: str, password: str):
             if 200 <= resp.status < 300:
                 token = json.loads(body).get("token")
                 if token:
+
                     save_login(teamname, username, token)
+
                     print("[CLIENT] Logged in")
                 else:
                     print("[ERROR] Invalid response from server")
@@ -121,3 +130,4 @@ def login_cli(teamname: str, username: str, password: str):
             print(f"[ERROR] {body}")
         except Exception:
             print(f"[ERROR] {exc}")
+

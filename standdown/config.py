@@ -27,16 +27,20 @@ def load_server():
     return data.get("address"), data.get("port", DEFAULT_PORT)
 
 
+
 def save_login(team: str, username: str, token: str):
     """Persist the authenticated team, username and token."""
     data = _read()
     data["team"] = team
     data["username"] = username
+
     data["token"] = token
     _write(data)
 
 
 def load_login():
+
     """Return the stored team, username and token if present."""
     data = _read()
     return data.get("team"), data.get("username"), data.get("token")
+

@@ -1,7 +1,9 @@
+
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import hashlib
 import secrets
+
 
 DATABASE_URL = "sqlite:///standdown.db"
 
@@ -14,6 +16,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+
 class Team(Base):
     """Database model for a team."""
 
@@ -22,6 +25,7 @@ class Team(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     admin_hash = Column(String, nullable=False)
+
 
 
 class User(Base):
@@ -35,6 +39,7 @@ class User(Base):
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
 
 
+
 class Token(Base):
     """Authentication token for a user."""
 
@@ -43,6 +48,7 @@ class Token(Base):
     id = Column(Integer, primary_key=True, index=True)
     token = Column(String, unique=True, index=True, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
 
 
 def hash_password(password: str) -> str:
@@ -64,6 +70,7 @@ def create_team(db: Session, name: str, admin_password: str) -> Team:
     return team
 
 
+
 def get_user_by_username(db: Session, username: str):
     """Retrieve a user by username if it exists."""
     return db.query(User).filter(User.username == username).first()
@@ -78,6 +85,7 @@ def create_user(db: Session, username: str, password: str, team_id: int) -> User
     db.commit()
     db.refresh(user)
     return user
+
 
 
 def create_token(db: Session, user_id: int) -> str:
@@ -102,6 +110,7 @@ def get_user_for_login(db: Session, team_id: int, username: str, password: str):
     return None
 
 
+
 def get_db():
     """Yield a database session for use with FastAPI dependencies."""
     db = SessionLocal()
@@ -109,6 +118,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 
 def init_db():

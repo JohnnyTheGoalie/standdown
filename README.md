@@ -38,11 +38,14 @@ sd signup <teamname> <adminpwd> <user1> [<user2> ...] <password>
 
 User passwords are stored hashed in the server database.
 
+
 Login as a user to receive an authentication token:
 
 ```bash
 sd login <teamname> <username> <password>
 ```
 
+
 The CLI stores the returned token along with the team name and username in the
 configuration file for future requests.
+
