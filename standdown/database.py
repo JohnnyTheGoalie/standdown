@@ -183,6 +183,20 @@ def create_message(
     db.commit()
     db.refresh(msg)
     return msg
+def get_active_messages(db: Session, team_id: int, msg_type: str | None):
+    """Return active messages for the given team and type."""
+    query = (
+        db.query(User.username, Message.content, Message.timestamp)
+        .join(Message, User.id == Message.user_id)
+        .filter(Message.team_id == team_id, Message.active == True)
+    )
+    if msg_type is None:
+        query = query.filter(Message.msg_type.is_(None))
+    else:
+        query = query.filter(Message.msg_type == msg_type)
+    return query.order_by(User.username.asc()).all()
+
+
 
 
 
