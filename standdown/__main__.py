@@ -3,6 +3,8 @@
 import argparse
 from standdown.cli import start_server, connect, create_team_cli
 from standdown.config import DEFAULT_PORT
+from pathlib import Path
+
 
 def main():
     parser = argparse.ArgumentParser(prog='sd', description='standdown CLI')
@@ -22,6 +24,7 @@ def main():
     create_parser = subparsers.add_parser('create', help='Create a team')
     create_parser.add_argument('teamname', help='Team name')
     create_parser.add_argument('adminpwd', help='Admin password')
+
 
     args = parser.parse_args()
 

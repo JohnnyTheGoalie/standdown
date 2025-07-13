@@ -21,7 +21,10 @@ def connect(address: str):
         port = DEFAULT_PORT
 
     save_server(host, port)
-    print(f"[CLIENT] Set server to {host}:{port}")
+    if port == DEFAULT_PORT:
+        print(f"[CLIENT] Routing requests to {host}")
+    else:
+        print(f"[CLIENT] Routing requests to {host}:{port}")
 
 def start_server(port: int = DEFAULT_PORT):
     print(f"[SERVER] Starting standdown FastAPI server on port {port}")

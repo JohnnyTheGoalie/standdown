@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from .database import init_db, get_db, get_team_by_name, create_team
 
+from .database import init_db
+
 app = FastAPI()
 
 

@@ -1,6 +1,8 @@
+
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import hashlib
+
 
 DATABASE_URL = "sqlite:///standdown.db"
 
@@ -11,6 +13,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
 
 
 class Team(Base):
@@ -49,6 +52,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 
 def init_db():
