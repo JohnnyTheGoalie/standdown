@@ -1,8 +1,7 @@
 
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import hashlib
-
 
 DATABASE_URL = "sqlite:///standdown.db"
 
@@ -26,6 +25,18 @@ class Team(Base):
     admin_hash = Column(String, nullable=False)
 
 
+
+class User(Base):
+    """Database model for a user belonging to a team."""
+
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+
+
 def hash_password(password: str) -> str:
     """Return a SHA256 hash of the provided password."""
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
@@ -43,6 +54,24 @@ def create_team(db: Session, name: str, admin_password: str) -> Team:
     db.commit()
     db.refresh(team)
     return team
+
+
+
+def get_user_by_username(db: Session, username: str):
+    """Retrieve a user by username if it exists."""
+    return db.query(User).filter(User.username == username).first()
+
+
+def create_user(db: Session, username: str, password: str, team_id: int) -> User:
+    """Create a user belonging to the given team."""
+    user = User(username=username,
+                password_hash=hash_password(password),
+                team_id=team_id)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
 
 
 def get_db():

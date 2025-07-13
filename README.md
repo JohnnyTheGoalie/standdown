@@ -29,3 +29,13 @@ sd create <teamname> <adminpwd>
 
 The admin password is stored hashed in the server database. Attempting
 to create a team that already exists will result in an error message.
+
+
+Add users to a team (the last argument is the password for all users):
+
+```bash
+sd signup <teamname> <adminpwd> <user1> [<user2> ...] <password>
+```
+
+User passwords are stored hashed in the server database.
+

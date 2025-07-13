@@ -4,9 +4,17 @@ from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from .database import init_db, get_db, get_team_by_name, create_team
 
-from .database import init_db
+from .database import (
+    init_db,
+    get_db,
+    get_team_by_name,
+    create_team,
+    hash_password,
+    get_user_by_username,
+    create_user,
+)
+
 
 app = FastAPI()
 
@@ -26,6 +34,14 @@ class TeamCreate(BaseModel):
     admin_password: str
 
 
+
+class UsersCreate(BaseModel):
+    admin_password: str
+    usernames: list[str]
+    password: str
+
+
+
 @app.post("/teams")
 def create_team_endpoint(payload: TeamCreate, db: Session = Depends(get_db)):
     """Create a new team if it doesn't already exist."""
@@ -34,3 +50,25 @@ def create_team_endpoint(payload: TeamCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Team already exists")
     create_team(db, payload.name, payload.admin_password)
     return {"message": "Team created"}
+
+
+
+@app.post("/teams/{team_name}/users")
+def create_users_endpoint(team_name: str, payload: UsersCreate, db: Session = Depends(get_db)):
+    """Add users to a team after verifying the admin password."""
+    team = get_team_by_name(db, team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    if team.admin_hash != hash_password(payload.admin_password):
+        raise HTTPException(status_code=403, detail="Invalid admin password")
+
+    created = []
+    for username in payload.usernames:
+        if get_user_by_username(db, username):
+            continue
+        user = create_user(db, username, payload.password, team.id)
+        created.append(user.username)
+
+    return {"message": "Users created", "users": created}
+

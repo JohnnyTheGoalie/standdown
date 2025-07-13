@@ -55,3 +55,34 @@ def create_team_cli(name: str, admin_password: str):
             print(f"[ERROR] {body}")
         except Exception:
             print(f"[ERROR] {exc}")
+
+
+
+def signup_cli(teamname: str, admin_password: str, usernames: list[str], password: str):
+    """Send a request to add users to a team."""
+    address, port = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    url = f"http://{address}:{port}/teams/{teamname}/users"
+    data = json.dumps({
+        "admin_password": admin_password,
+        "usernames": usernames,
+        "password": password,
+    }).encode("utf-8")
+    req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+    try:
+        with request.urlopen(req) as resp:
+            if 200 <= resp.status < 300:
+                print("[CLIENT] Users created")
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+
