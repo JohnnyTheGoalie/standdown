@@ -116,7 +116,9 @@ def login_cli(teamname: str, username: str, password: str):
             if 200 <= resp.status < 300:
                 token = json.loads(body).get("token")
                 if token:
-                    save_login(teamname, token)
+
+                    save_login(teamname, username, token)
+
                     print("[CLIENT] Logged in")
                 else:
                     print("[ERROR] Invalid response from server")

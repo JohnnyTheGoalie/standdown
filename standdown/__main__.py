@@ -39,14 +39,14 @@ def main():
     signup_parser.add_argument('adminpwd', help='Admin password')
     signup_parser.add_argument('users', nargs='+', help='List of usernames followed by password (last arg)')
 
-
+   
     # Subcommand: sd login <team> <username> <password>
     login_parser = subparsers.add_parser('login', help='Login as a user')
     login_parser.add_argument('teamname', help='Team name')
     login_parser.add_argument('username', help='Username')
     login_parser.add_argument('password', help='Password')
 
-
+    
     args = parser.parse_args()
 
     if args.command == 'server':

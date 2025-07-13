@@ -30,7 +30,6 @@ sd create <teamname> <adminpwd>
 The admin password is stored hashed in the server database. Attempting
 to create a team that already exists will result in an error message.
 
-
 Add users to a team (the last argument is the password for all users):
 
 ```bash
@@ -46,6 +45,7 @@ Login as a user to receive an authentication token:
 sd login <teamname> <username> <password>
 ```
 
-The CLI stores the returned token and team name in the configuration file for
-future requests.
+
+The CLI stores the returned token along with the team name and username in the
+configuration file for future requests.
 

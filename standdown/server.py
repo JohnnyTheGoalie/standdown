@@ -43,7 +43,6 @@ class UsersCreate(BaseModel):
     password: str
 
 
-
 class LoginRequest(BaseModel):
     team_name: str
     username: str
