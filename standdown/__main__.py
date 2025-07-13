@@ -3,6 +3,8 @@
 import argparse
 from standdown.cli import start_server, connect
 from standdown.config import DEFAULT_PORT
+from pathlib import Path
+
 
 def main():
     parser = argparse.ArgumentParser(prog='sd', description='standdown CLI')
@@ -18,12 +20,17 @@ def main():
     conn_parser = subparsers.add_parser('conn', help='Set the server address')
     conn_parser.add_argument('address', help='IP/domain optionally with :port')
 
+
+    conn_parser = subparsers.add_parser('where', help='Set the server address')
+
     args = parser.parse_args()
 
     if args.command == 'server':
         start_server(args.port)
     elif args.command == 'conn':
         connect(args.address)
+    elif args.command == 'where':
+        print(Path.home())
     else:
         parser.print_help()
 

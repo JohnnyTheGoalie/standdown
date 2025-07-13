@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import logging
 
 DEFAULT_PORT = 8000
 CONFIG_PATH = Path.home() / ".standdown_config.json"
