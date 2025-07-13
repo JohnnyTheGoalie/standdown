@@ -5,7 +5,14 @@ from urllib import request
 
 import uvicorn
 from standdown import server
-from .config import save_server, load_server, DEFAULT_PORT
+
+from .config import (
+    save_server,
+    load_server,
+    save_login,
+    DEFAULT_PORT,
+)
+
 
 
 def connect(address: str):
@@ -79,6 +86,42 @@ def signup_cli(teamname: str, admin_password: str, usernames: list[str], passwor
                 print("[CLIENT] Users created")
             else:
                 print(f"[ERROR] Server responded with status {resp.status}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+
+
+
+def login_cli(teamname: str, username: str, password: str):
+    """Login a user and store the returned token."""
+    address, port = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    url = f"http://{address}:{port}/login"
+    data = json.dumps({
+        "team_name": teamname,
+        "username": username,
+        "password": password,
+    }).encode("utf-8")
+    req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+    try:
+        with request.urlopen(req) as resp:
+            body = resp.read().decode()
+            if 200 <= resp.status < 300:
+                token = json.loads(body).get("token")
+                if token:
+                    save_login(teamname, token)
+                    print("[CLIENT] Logged in")
+                else:
+                    print("[ERROR] Invalid response from server")
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}: {body}")
     except Exception as exc:
         try:
             body = exc.read().decode()

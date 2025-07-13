@@ -13,6 +13,8 @@ from .database import (
     hash_password,
     get_user_by_username,
     create_user,
+    create_token,
+    get_user_for_login,
 )
 
 
@@ -38,6 +40,13 @@ class TeamCreate(BaseModel):
 class UsersCreate(BaseModel):
     admin_password: str
     usernames: list[str]
+    password: str
+
+
+
+class LoginRequest(BaseModel):
+    team_name: str
+    username: str
     password: str
 
 
@@ -71,4 +80,20 @@ def create_users_endpoint(team_name: str, payload: UsersCreate, db: Session = De
         created.append(user.username)
 
     return {"message": "Users created", "users": created}
+
+
+
+@app.post("/login")
+def login_endpoint(payload: LoginRequest, db: Session = Depends(get_db)):
+    """Validate credentials and return an auth token."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_for_login(db, team.id, payload.username, payload.password)
+    if not user:
+        raise HTTPException(status_code=403, detail="Invalid credentials")
+
+    token = create_token(db, user.id)
+    return {"token": token}
 

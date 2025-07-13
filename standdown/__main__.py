@@ -2,7 +2,14 @@
 
 import argparse
 
-from standdown.cli import start_server, connect, create_team_cli, signup_cli
+from standdown.cli import (
+    start_server,
+    connect,
+    create_team_cli,
+    signup_cli,
+    login_cli,
+)
+
 from standdown.config import DEFAULT_PORT
 from pathlib import Path
 
@@ -33,6 +40,13 @@ def main():
     signup_parser.add_argument('users', nargs='+', help='List of usernames followed by password (last arg)')
 
 
+    # Subcommand: sd login <team> <username> <password>
+    login_parser = subparsers.add_parser('login', help='Login as a user')
+    login_parser.add_argument('teamname', help='Team name')
+    login_parser.add_argument('username', help='Username')
+    login_parser.add_argument('password', help='Password')
+
+
     args = parser.parse_args()
 
     if args.command == 'server':
@@ -49,6 +63,9 @@ def main():
         usernames = args.users[:-1]
         password = args.users[-1]
         signup_cli(args.teamname, args.adminpwd, usernames, password)
+
+    elif args.command == 'login':
+        login_cli(args.teamname, args.username, args.password)
 
     else:
         parser.print_help()
