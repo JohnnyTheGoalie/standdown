@@ -1,18 +1,23 @@
-import sys
+# standdown/__main__.py
+
+import argparse
+from standdown.cli import start_server
 
 def main():
-    args = sys.argv[1:]
+    parser = argparse.ArgumentParser(prog='sd', description='standdown CLI')
 
-    if not args:
-        print("Usage: sd <command>")
-        return
+    subparsers = parser.add_subparsers(dest='command')
 
-    if args[0] in ("conn", "connect"):
-        if len(args) != 2:
-            print("Usage: sd conn <git-repo-url>")
-            return
+    # Subcommand: sd server port 8000
+    server_parser = subparsers.add_parser('server', help='Run the standdown server')
+    server_parser.add_argument('port', type=int, help='Port to run the server on')
 
-        from standdown.connect import connect
-        connect(args[1])
+    args = parser.parse_args()
+
+    if args.command == 'server':
+        start_server(args.port)
     else:
-        print(f"Unknown command: {args[0]}")
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()

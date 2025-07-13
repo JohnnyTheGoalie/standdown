@@ -1,10 +1,10 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='standdown',
     version='0.1.0',
     author='Jovan Lukovic',
-    packages=['standdown'],
+    packages=find_packages(),
     entry_points={
         "console_scripts": [
             "standdown=standdown.__main__:main",
