@@ -5,10 +5,15 @@ setup(
     version='0.1.0',
     author='Jovan Lukovic',
     packages=find_packages(),
+    install_requires=[
+        'fastapi',
+        'uvicorn',
+        'SQLAlchemy',
+    ],
     entry_points={
-        "console_scripts": [
-            "standdown=standdown.__main__:main",
-            "sd=standdown.__main__:main",
+        'console_scripts': [
+            'standdown=standdown.__main__:main',
+            'sd=standdown.__main__:main',
         ]
     }
 )
