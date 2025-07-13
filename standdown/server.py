@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+
 from .database import (
     init_db,
     get_db,
@@ -13,6 +14,7 @@ from .database import (
     get_user_by_username,
     create_user,
 )
+
 
 app = FastAPI()
 
@@ -32,10 +34,12 @@ class TeamCreate(BaseModel):
     admin_password: str
 
 
+
 class UsersCreate(BaseModel):
     admin_password: str
     usernames: list[str]
     password: str
+
 
 
 @app.post("/teams")
@@ -46,6 +50,7 @@ def create_team_endpoint(payload: TeamCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Team already exists")
     create_team(db, payload.name, payload.admin_password)
     return {"message": "Team created"}
+
 
 
 @app.post("/teams/{team_name}/users")
@@ -66,3 +71,4 @@ def create_users_endpoint(team_name: str, payload: UsersCreate, db: Session = De
         created.append(user.username)
 
     return {"message": "Users created", "users": created}
+

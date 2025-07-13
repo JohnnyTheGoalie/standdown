@@ -1,3 +1,4 @@
+
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import hashlib
@@ -13,6 +14,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+
 class Team(Base):
     """Database model for a team."""
 
@@ -21,6 +23,7 @@ class Team(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     admin_hash = Column(String, nullable=False)
+
 
 
 class User(Base):
@@ -53,6 +56,7 @@ def create_team(db: Session, name: str, admin_password: str) -> Team:
     return team
 
 
+
 def get_user_by_username(db: Session, username: str):
     """Retrieve a user by username if it exists."""
     return db.query(User).filter(User.username == username).first()
@@ -69,6 +73,7 @@ def create_user(db: Session, username: str, password: str, team_id: int) -> User
     return user
 
 
+
 def get_db():
     """Yield a database session for use with FastAPI dependencies."""
     db = SessionLocal()
@@ -76,6 +81,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 
 def init_db():

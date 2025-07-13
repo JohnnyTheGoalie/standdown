@@ -21,7 +21,10 @@ def connect(address: str):
         port = DEFAULT_PORT
 
     save_server(host, port)
-    print(f"[CLIENT] Set server to {host}:{port}")
+    if port == DEFAULT_PORT:
+        print(f"[CLIENT] Routing requests to {host}")
+    else:
+        print(f"[CLIENT] Routing requests to {host}:{port}")
 
 def start_server(port: int = DEFAULT_PORT):
     print(f"[SERVER] Starting standdown FastAPI server on port {port}")
@@ -54,6 +57,7 @@ def create_team_cli(name: str, admin_password: str):
             print(f"[ERROR] {exc}")
 
 
+
 def signup_cli(teamname: str, admin_password: str, usernames: list[str], password: str):
     """Send a request to add users to a team."""
     address, port = load_server()
@@ -81,3 +85,4 @@ def signup_cli(teamname: str, admin_password: str, usernames: list[str], passwor
             print(f"[ERROR] {body}")
         except Exception:
             print(f"[ERROR] {exc}")
+
