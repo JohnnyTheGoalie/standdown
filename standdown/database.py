@@ -100,6 +100,15 @@ def get_user_by_username(db: Session, username: str):
     return db.query(User).filter(User.username == username).first()
 
 
+def get_user_in_team(db: Session, team_id: int, username: str):
+    """Retrieve a user by username within the given team."""
+    return (
+        db.query(User)
+        .filter(User.username == username, User.team_id == team_id)
+        .first()
+    )
+
+
 def create_user(db: Session, username: str, password: str, team_id: int) -> User:
     """Create a user belonging to the given team."""
     user = User(username=username,

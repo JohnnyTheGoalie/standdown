@@ -12,6 +12,7 @@ from .database import (
     create_team,
     hash_password,
     get_user_by_username,
+    get_user_in_team,
     create_user,
     create_token,
     get_user_for_login,
@@ -84,7 +85,7 @@ def create_users_endpoint(team_name: str, payload: UsersCreate, db: Session = De
 
     created = []
     for username in payload.usernames:
-        if get_user_by_username(db, username):
+        if get_user_in_team(db, team.id, username):
             continue
         user = create_user(db, username, payload.password, team.id)
         created.append(user.username)
@@ -115,8 +116,10 @@ def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    user = get_user_by_username(db, payload.username)
-    if not user or user.team_id != team.id:
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+
         raise HTTPException(status_code=404, detail="User not found")
 
     token_user = get_user_by_token(db, payload.token)
