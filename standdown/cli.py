@@ -168,3 +168,83 @@ def send_message_cli(message: str, flag: str | None):
         except Exception:
             print(f"[ERROR] {exc}")
 
+
+from datetime import datetime
+
+
+COLOR_CODES = [
+    "\033[31m",  # red
+    "\033[32m",  # green
+    "\033[33m",  # yellow
+    "\033[34m",  # blue
+    "\033[35m",  # magenta
+    "\033[36m",  # cyan
+]
+
+_user_colors: dict[str, str] = {}
+
+
+def _color_for_user(username: str) -> str:
+    if username not in _user_colors:
+        index = len(_user_colors) % len(COLOR_CODES)
+        _user_colors[username] = COLOR_CODES[index]
+    return _user_colors[username]
+
+
+def _fetch_messages(url: str) -> list[dict]:
+    req = request.Request(url)
+    try:
+        with request.urlopen(req) as resp:
+            body = resp.read().decode()
+            if 200 <= resp.status < 300:
+                data = json.loads(body)
+                msgs = data.get("messages", [])
+                msgs.sort(key=lambda m: m.get("username", ""))
+                return msgs
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}: {body}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+    return []
+
+
+def show_team_cli():
+    """Display the team's pinned messages, standup messages and blockers."""
+    address, port = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    team, token, username = load_login()
+    if not team:
+        print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
+        return
+
+    base_url = f"http://{address}:{port}/teams/{team}/messages"
+
+    pinned = _fetch_messages(base_url + "?type=pin")
+    messages = _fetch_messages(base_url)
+    blockers = _fetch_messages(base_url + "?type=blockers")
+
+    def _print_section(title: str, items: list[dict]):
+        if not items:
+            return
+        print(f"//{title}")
+        for msg in items:
+            ts = datetime.fromisoformat(msg["timestamp"])
+            delta = datetime.utcnow() - ts
+            hours, rem = divmod(int(delta.total_seconds()), 3600)
+            minutes = rem // 60
+            color = _color_for_user(msg["username"])
+            reset = "\033[0m"
+            print(f"{color}{msg['username']}{reset}: {msg['content']} ({hours:02d}:{minutes:02d} ago)")
+        print()
+
+    if pinned:
+        _print_section("Pinned", pinned)
+    _print_section("Messages", messages)
+    _print_section("Blockers", blockers)

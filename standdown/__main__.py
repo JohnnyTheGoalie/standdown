@@ -6,6 +6,7 @@ from standdown.cli import (
     start_server,
     connect,
     create_team_cli,
+    show_team_cli,
     signup_cli,
     login_cli,
     send_message_cli,
@@ -19,7 +20,7 @@ def main():
     # If the first argument is not a known subcommand, treat the entire
     # invocation as a message to post.
     known = {
-        'server', 'conn', 'create', 'signup', 'login', 'msg', 'blockers', 'pin'
+        'server', 'conn', 'create', 'signup', 'login', 'msg', 'blockers', 'pin', 'team'
     }
     import sys
     if len(sys.argv) > 1 and sys.argv[1] not in known:
@@ -68,6 +69,8 @@ def main():
     # Subcommand: sd pin <message>
     pin_parser = subparsers.add_parser('pin', help='Send a pin message')
     pin_parser.add_argument('message', help='Message text')
+    # Subcommand: sd team
+    team_parser = subparsers.add_parser("team", help="Show team standup")
 
     login_parser.add_argument('password', help='Password')
 
@@ -96,6 +99,8 @@ def main():
         send_message_cli(args.message, None)
     elif args.command == 'blockers':
         send_message_cli(args.message, 'blockers')
+    elif args.command == 'team':
+        show_team_cli()
     elif args.command == 'pin':
         send_message_cli(args.message, 'pin')
 
