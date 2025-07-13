@@ -10,6 +10,7 @@ from .config import (
     save_server,
     load_server,
     save_login,
+    load_login,
     DEFAULT_PORT,
 )
 
@@ -116,10 +117,48 @@ def login_cli(teamname: str, username: str, password: str):
             if 200 <= resp.status < 300:
                 token = json.loads(body).get("token")
                 if token:
-                    save_login(teamname, token)
+                    save_login(teamname, token, username)
                     print("[CLIENT] Logged in")
                 else:
                     print("[ERROR] Invalid response from server")
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}: {body}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+
+
+def send_message_cli(message: str, flag: str | None):
+    """Send a message to the server with optional flag."""
+    address, port = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    team, token, username = load_login()
+    if not team or not token or not username:
+        print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
+        return
+
+    url = f"http://{address}:{port}/messages"
+    data = json.dumps({
+        "team_name": team,
+        "username": username,
+        "token": token,
+        "message": message,
+        "flag": flag,
+    }).encode("utf-8")
+
+    req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+    try:
+        with request.urlopen(req) as resp:
+            body = resp.read().decode()
+            if 200 <= resp.status < 300:
+                print("[CLIENT] Message sent")
             else:
                 print(f"[ERROR] Server responded with status {resp.status}: {body}")
     except Exception as exc:

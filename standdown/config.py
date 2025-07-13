@@ -27,13 +27,14 @@ def load_server():
     return data.get("address"), data.get("port", DEFAULT_PORT)
 
 
-def save_login(team: str, token: str):
+def save_login(team: str, token: str, username: str):
     data = _read()
     data["team"] = team
     data["token"] = token
+    data["username"] = username
     _write(data)
 
 
 def load_login():
     data = _read()
-    return data.get("team"), data.get("token")
+    return data.get("team"), data.get("token"), data.get("username")

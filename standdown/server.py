@@ -15,6 +15,8 @@ from .database import (
     create_user,
     create_token,
     get_user_for_login,
+    get_user_by_token,
+    create_message,
 )
 
 
@@ -48,6 +50,14 @@ class LoginRequest(BaseModel):
     team_name: str
     username: str
     password: str
+
+
+class MessagePost(BaseModel):
+    team_name: str
+    username: str
+    token: str
+    message: str
+    flag: str | None = None
 
 
 
@@ -96,4 +106,23 @@ def login_endpoint(payload: LoginRequest, db: Session = Depends(get_db)):
 
     token = create_token(db, user.id)
     return {"token": token}
+
+
+@app.post("/messages")
+def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
+    """Create a message for a user after validating token."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_by_username(db, payload.username)
+    if not user or user.team_id != team.id:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    create_message(db, user.id, team.id, payload.message, payload.flag)
+    return {"message": "Message posted"}
 

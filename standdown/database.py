@@ -1,5 +1,15 @@
 
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    Boolean,
+    DateTime,
+    Text,
+)
+from datetime import datetime
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import hashlib
 import secrets
@@ -48,6 +58,20 @@ class Token(Base):
     id = Column(Integer, primary_key=True, index=True)
     token = Column(String, unique=True, index=True, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+
+class Message(Base):
+    """Message posted by a user."""
+
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    msg_type = Column(String, nullable=True)
+    active = Column(Boolean, default=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
 
@@ -108,6 +132,48 @@ def get_user_for_login(db: Session, team_id: int, username: str, password: str):
     if user and user.password_hash == hash_password(password):
         return user
     return None
+
+
+def get_user_by_token(db: Session, token_str: str):
+    """Return the user associated with the given token string."""
+    tok = db.query(Token).filter(Token.token == token_str).first()
+    if tok:
+        return db.query(User).filter(User.id == tok.user_id).first()
+    return None
+
+
+def deactivate_existing(db: Session, user_id: int, msg_type: str | None):
+    """Mark previous active messages of this type as inactive."""
+    query = db.query(Message).filter(Message.user_id == user_id, Message.active == True)
+    if msg_type is None:
+        query = query.filter(Message.msg_type.is_(None))
+    else:
+        query = query.filter(Message.msg_type == msg_type)
+    for msg in query.all():
+        msg.active = False
+    db.commit()
+
+
+def create_message(
+    db: Session,
+    user_id: int,
+    team_id: int,
+    content: str,
+    msg_type: str | None,
+) -> Message:
+    """Create a message and mark previous ones inactive."""
+    deactivate_existing(db, user_id, msg_type)
+    msg = Message(
+        user_id=user_id,
+        team_id=team_id,
+        content=content,
+        msg_type=msg_type,
+        active=True,
+    )
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    return msg
 
 
 

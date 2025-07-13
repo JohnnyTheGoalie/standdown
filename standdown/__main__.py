@@ -8,6 +8,7 @@ from standdown.cli import (
     create_team_cli,
     signup_cli,
     login_cli,
+    send_message_cli,
 )
 
 from standdown.config import DEFAULT_PORT
@@ -15,6 +16,17 @@ from pathlib import Path
 
 
 def main():
+    # If the first argument is not a known subcommand, treat the entire
+    # invocation as a message to post.
+    known = {
+        'server', 'conn', 'create', 'signup', 'login', 'msg', 'blockers', 'pin'
+    }
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] not in known:
+        message = ' '.join(sys.argv[1:])
+        send_message_cli(message, None)
+        return
+
     parser = argparse.ArgumentParser(prog='sd', description='standdown CLI')
 
     subparsers = parser.add_subparsers(dest='command')
@@ -44,6 +56,19 @@ def main():
     login_parser = subparsers.add_parser('login', help='Login as a user')
     login_parser.add_argument('teamname', help='Team name')
     login_parser.add_argument('username', help='Username')
+
+    # Subcommand: sd msg <message>
+    msg_parser = subparsers.add_parser('msg', help='Send a message')
+    msg_parser.add_argument('message', help='Message text')
+
+    # Subcommand: sd blockers <message>
+    blockers_parser = subparsers.add_parser('blockers', help='Send a blockers message')
+    blockers_parser.add_argument('message', help='Message text')
+
+    # Subcommand: sd pin <message>
+    pin_parser = subparsers.add_parser('pin', help='Send a pin message')
+    pin_parser.add_argument('message', help='Message text')
+
     login_parser.add_argument('password', help='Password')
 
 
@@ -66,6 +91,13 @@ def main():
 
     elif args.command == 'login':
         login_cli(args.teamname, args.username, args.password)
+
+    elif args.command == 'msg':
+        send_message_cli(args.message, None)
+    elif args.command == 'blockers':
+        send_message_cli(args.message, 'blockers')
+    elif args.command == 'pin':
+        send_message_cli(args.message, 'pin')
 
     else:
         parser.print_help()
