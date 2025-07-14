@@ -183,6 +183,13 @@ def create_message(
     db.commit()
     db.refresh(msg)
     return msg
+
+
+def change_user_password(db: Session, user: User, new_password: str):
+    """Update the user's password hash."""
+    user.password_hash = hash_password(new_password)
+    db.commit()
+
 def get_active_messages(db: Session, team_id: int):
     """Return active messages for the given team and type.
 

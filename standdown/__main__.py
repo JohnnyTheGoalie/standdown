@@ -10,6 +10,7 @@ from standdown.cli import (
     signup_cli,
     login_cli,
     send_message_cli,
+    reset_password_cli,
 )
 
 from standdown.config import DEFAULT_PORT
@@ -20,7 +21,8 @@ def main():
     # If the first argument is not a known subcommand, treat the entire
     # invocation as a message to post.
     known = {
-        'server', 'conn', 'create', 'signup', 'login', 'msg', 'blockers', 'pin', 'team'
+        'server', 'conn', 'create', 'signup', 'login', 'msg',
+        'blockers', 'pin', 'team', 'resetpwd'
     }
     import sys
     if len(sys.argv) > 1 and sys.argv[1] not in known:
@@ -58,6 +60,12 @@ def main():
     login_parser.add_argument('teamname', help='Team name')
     login_parser.add_argument('username', help='Username')
 
+    # Subcommand: sd resetpwd <old> <new> <new>
+    reset_parser = subparsers.add_parser('resetpwd', help='Change your password')
+    reset_parser.add_argument('old', help='Current password')
+    reset_parser.add_argument('new', help='New password')
+    reset_parser.add_argument('new2', help='Repeat new password')
+
     # Subcommand: sd msg <message>
     msg_parser = subparsers.add_parser('msg', help='Send a message')
     msg_parser.add_argument('message', help='Message text')
@@ -94,6 +102,9 @@ def main():
 
     elif args.command == 'login':
         login_cli(args.teamname, args.username, args.password)
+
+    elif args.command == 'resetpwd':
+        reset_password_cli(args.old, args.new, args.new2)
 
     elif args.command == 'msg':
         send_message_cli(args.message, 'msg')
