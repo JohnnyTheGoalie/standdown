@@ -296,6 +296,6 @@ def show_team_cli():
     if pinned:
         _print_section("Pinned", pinned)
     if messages:
-        _print_section("Messages", messages)
+        _print_section("In progress", messages)
     if blockers:
         _print_section("Blockers", blockers)
