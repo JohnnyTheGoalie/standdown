@@ -3,6 +3,11 @@
 import json
 from urllib import request
 
+from colorama import init as colorama_init
+
+# Initialize color support on all platforms
+colorama_init(autoreset=True)
+
 import uvicorn
 from standdown import server
 

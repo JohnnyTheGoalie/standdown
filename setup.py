@@ -9,6 +9,7 @@ setup(
         'fastapi',
         'uvicorn',
         'SQLAlchemy',
+        'colorama',
     ],
     entry_points={
         'console_scripts': [
