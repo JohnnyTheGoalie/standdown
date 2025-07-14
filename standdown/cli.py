@@ -335,7 +335,14 @@ def show_team_cli():
             minutes = rem // 60
             color = _color_for_user(msg["username"])
             reset = "\033[0m"
-            print(f"{color}{msg['username']}{reset}: {msg['content']} ({hours:02d}:{minutes:02d} ago)")
+            if hours:
+                if minutes:
+                    age = f"{hours}h {minutes}min"
+                else:
+                    age = f"{hours}h"
+            else:
+                age = f"{minutes}min"
+            print(f"{color}{msg['username']}{reset}: {msg['content']} ({age} ago)")
         print()
 
     if pinned:
@@ -377,4 +384,4 @@ def show_logs_cli(day: str, flag: str | None, users: list[str]):
         ts = datetime.fromisoformat(msg["timestamp"])
         color = _color_for_user(msg["username"])
         reset = "\033[0m"
-        print(f"{color}{msg['username']}{reset}: {msg['content']} ({ts.isoformat()})")
+        print(f"{color}{msg['username']}{reset}: {msg['content']} ({ts.strftime('%H:%M')})")
