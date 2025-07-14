@@ -219,7 +219,6 @@ from datetime import datetime
 
 
 COLOR_CODES = [
-    "\033[31m",  # red
     "\033[32m",  # green
     "\033[33m",  # yellow
     "\033[34m",  # blue
@@ -282,7 +281,7 @@ def show_team_cli():
     def _print_section(title: str, items: list[dict]):
         if not items:
             return
-        print(f"//{title}")
+        print(f"\033[31m/////{title.upper()}/////")
         for msg in items:
             ts = datetime.fromisoformat(msg["timestamp"])
             delta = datetime.utcnow() - ts
