@@ -133,7 +133,10 @@ def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
 
 @app.get("/teams/{team_name}/messages")
 def get_messages_endpoint(
-    team_name: str, db: Session = Depends(get_db)
+    team_name: str,
+    username: str,
+    token: str,
+    db: Session = Depends(get_db),
 ):
     """Return active messages for a team.
 
@@ -145,6 +148,14 @@ def get_messages_endpoint(
     team = get_team_by_name(db, team_name)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
 
     messages = get_active_messages(db, team.id)
     result = [
