@@ -183,7 +183,7 @@ def create_message(
     db.commit()
     db.refresh(msg)
     return msg
-def get_active_messages(db: Session, team_id: int, msg_type: str | None):
+def get_active_messages(db: Session, team_id: int):
     """Return active messages for the given team and type.
 
     When ``msg_type`` is ``"all"`` no filtering is applied and messages of all
@@ -201,12 +201,6 @@ def get_active_messages(db: Session, team_id: int, msg_type: str | None):
         .join(Message, User.id == Message.user_id)
         .filter(Message.team_id == team_id, Message.active == True)
     )
-
-    if msg_type != "all":
-        if msg_type is None:
-            query = query.filter(Message.msg_type.is_(None))
-        else:
-            query = query.filter(Message.msg_type == msg_type)
 
     return query.order_by(User.username.asc()).all()
 

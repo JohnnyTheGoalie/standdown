@@ -134,7 +134,7 @@ def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
 
 @app.get("/teams/{team_name}/messages")
 def get_messages_endpoint(
-    team_name: str, msg_type: str | None = None, db: Session = Depends(get_db)
+    team_name: str, db: Session = Depends(get_db)
 ):
     """Return active messages for a team.
 

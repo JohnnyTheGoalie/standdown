@@ -226,10 +226,11 @@ def show_team_cli():
 
     base_url = f"http://{address}:{port}/teams/{team}/messages"
 
-    all_msgs = _fetch_messages(base_url + "?type=all")
+    all_msgs = _fetch_messages(base_url)
     pinned = [m for m in all_msgs if m.get("msg_type") == "pin"]
     blockers = [m for m in all_msgs if m.get("msg_type") == "blockers"]
     messages = [m for m in all_msgs if m.get("msg_type") is None]
+    
 
     def _print_section(title: str, items: list[dict]):
         if not items:
@@ -247,5 +248,7 @@ def show_team_cli():
 
     if pinned:
         _print_section("Pinned", pinned)
-    _print_section("Messages", messages)
-    _print_section("Blockers", blockers)
+    if messages:
+        _print_section("Messages", messages)
+    if blockers:
+        _print_section("Blockers", blockers)

@@ -96,13 +96,13 @@ def main():
         login_cli(args.teamname, args.username, args.password)
 
     elif args.command == 'msg':
-        send_message_cli(args.message, None)
+        send_message_cli(args.message, 'msg')
     elif args.command == 'blockers':
         send_message_cli(args.message, 'blockers')
-    elif args.command == 'team':
-        show_team_cli()
     elif args.command == 'pin':
         send_message_cli(args.message, 'pin')
+    elif args.command == 'team':
+        show_team_cli()
 
     else:
         parser.print_help()
