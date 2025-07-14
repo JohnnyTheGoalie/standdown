@@ -9,7 +9,7 @@ from sqlalchemy import (
     DateTime,
     Text,
 )
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import hashlib
 import secrets
@@ -215,6 +215,53 @@ def get_active_messages(db: Session, team_id: int):
     )
 
     return query.order_by(User.username.asc()).all()
+
+
+def get_messages_in_range(
+    db: Session,
+    team_id: int,
+    start: datetime,
+    end: datetime,
+    msg_type: str | None = None,
+    usernames: list[str] | None = None,
+) -> list[tuple[str, str, str | None, datetime]]:
+    """Return messages for a team within a time range."""
+
+    query = (
+        db.query(
+            User.username,
+            Message.content,
+            Message.msg_type,
+            Message.timestamp,
+        )
+        .join(Message, User.id == Message.user_id)
+        .filter(Message.team_id == team_id)
+        .filter(Message.timestamp >= start, Message.timestamp < end)
+    )
+
+    if msg_type is None:
+        query = query.filter(Message.msg_type.is_(None))
+    else:
+        query = query.filter(Message.msg_type == msg_type)
+
+    if usernames:
+        query = query.filter(User.username.in_(usernames))
+
+    return query.order_by(Message.timestamp.asc()).all()
+
+
+def get_messages_for_day(
+    db: Session,
+    team_id: int,
+    day: date,
+    msg_type: str | None = None,
+    usernames: list[str] | None = None,
+) -> list[tuple[str, str, str | None, datetime]]:
+    """Return messages for a specific day (UTC)."""
+
+    start = datetime.combine(day, datetime.min.time())
+    end = start + timedelta(days=1)
+    return get_messages_in_range(db, team_id, start, end, msg_type, usernames)
 
 
 

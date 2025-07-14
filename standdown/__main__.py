@@ -7,6 +7,7 @@ from standdown.cli import (
     connect,
     create_team_cli,
     show_team_cli,
+    show_logs_cli,
     signup_cli,
     login_cli,
     send_message_cli,
@@ -23,7 +24,8 @@ def main():
     # invocation as a message to post.
     known = {
         'server', 'conn', 'create', 'signup', 'login', 'msg',
-        'blockers', 'pin', 'team', 'resetpwd', 'done'
+        'blockers', 'pin', 'team', 'resetpwd', 'done',
+        'today', 'yesterday'
     }
     import sys
     if len(sys.argv) > 1 and sys.argv[1] not in known:
@@ -71,13 +73,21 @@ def main():
     msg_parser = subparsers.add_parser('msg', help='Send a message')
     msg_parser.add_argument('message', help='Message text')
 
-    # Subcommand: sd blockers <message>
-    blockers_parser = subparsers.add_parser('blockers', help='Send a blockers message')
-    blockers_parser.add_argument('message', help='Message text')
+    # Subcommand: sd blockers <message> or logs
+    blockers_parser = subparsers.add_parser('blockers', help='Send a blockers message or view logs')
+    blockers_parser.add_argument('params', nargs=argparse.REMAINDER, help="Message text or 'today'/'yesterday'")
 
-    # Subcommand: sd pin <message>
-    pin_parser = subparsers.add_parser('pin', help='Send a pin message')
-    pin_parser.add_argument('message', help='Message text')
+    # Subcommand: sd pin <message> or logs
+    pin_parser = subparsers.add_parser('pin', help='Send a pin message or view logs')
+    pin_parser.add_argument('params', nargs=argparse.REMAINDER, help="Message text or 'today'/'yesterday'")
+
+    # Subcommand: sd today [user...]
+    today_parser = subparsers.add_parser('today', help='Show today\'s standup logs')
+    today_parser.add_argument('users', nargs='*', help='Optional usernames')
+
+    # Subcommand: sd yesterday [user...]
+    yest_parser = subparsers.add_parser('yesterday', help='Show yesterday\'s standup logs')
+    yest_parser.add_argument('users', nargs='*', help='Optional usernames')
     # Subcommand: sd team
     team_parser = subparsers.add_parser("team", help="Show team standup")
 
@@ -113,19 +123,37 @@ def main():
     elif args.command == 'msg':
         send_message_cli(args.message, 'msg')
     elif args.command == 'blockers':
-        if args.message == 'done':
-            deactivate_messages_cli('blockers')
+        if not args.params:
+            print("[ERROR] Provide a message or 'today'/'yesterday'")
         else:
-            send_message_cli(args.message, 'blockers')
+            action = args.params[0]
+            rest = args.params[1:]
+            if action in ('today', 'yesterday'):
+                show_logs_cli(action, 'blockers', rest)
+            elif action == 'done':
+                deactivate_messages_cli('blockers')
+            else:
+                send_message_cli(' '.join(args.params), 'blockers')
     elif args.command == 'pin':
-        if args.message == 'done':
-            deactivate_messages_cli('pin')
+        if not args.params:
+            print("[ERROR] Provide a message or 'today'/'yesterday'")
         else:
-            send_message_cli(args.message, 'pin')
+            action = args.params[0]
+            rest = args.params[1:]
+            if action in ('today', 'yesterday'):
+                show_logs_cli(action, 'pin', rest)
+            elif action == 'done':
+                deactivate_messages_cli('pin')
+            else:
+                send_message_cli(' '.join(args.params), 'pin')
     elif args.command == 'done':
         deactivate_messages_cli(None)
     elif args.command == 'team':
         show_team_cli()
+    elif args.command == 'today':
+        show_logs_cli('today', None, args.users)
+    elif args.command == 'yesterday':
+        show_logs_cli('yesterday', None, args.users)
 
     else:
         parser.print_help()
