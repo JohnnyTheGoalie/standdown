@@ -120,7 +120,6 @@ def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
 
     user = get_user_in_team(db, team.id, payload.username)
     if not user:
-
         raise HTTPException(status_code=404, detail="User not found")
 
     token_user = get_user_by_token(db, payload.token)
