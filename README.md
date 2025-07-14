@@ -37,7 +37,7 @@ Add users to a team (the last argument is the password for all users):
 sd signup <teamname> <adminpwd> <user1> [<user2> ...] <password>
 ```
 
-User passwords are stored hashed in the server database.
+User passwords are stored hashed with a unique salt in the server database.
 
 
 Login as a user to receive an authentication token:

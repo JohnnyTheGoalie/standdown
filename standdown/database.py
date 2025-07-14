@@ -46,6 +46,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    salt = Column(String, nullable=False)
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
 
 
@@ -75,9 +76,9 @@ class Message(Base):
 
 
 
-def hash_password(password: str) -> str:
-    """Return a SHA256 hash of the provided password."""
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+def hash_password(password: str, salt: str = "") -> str:
+    """Return a SHA256 hash of the provided password and salt."""
+    return hashlib.sha256(f"{password}{salt}".encode("utf-8")).hexdigest()
 
 
 def get_team_by_name(db: Session, name: str):
@@ -111,9 +112,13 @@ def get_user_in_team(db: Session, team_id: int, username: str):
 
 def create_user(db: Session, username: str, password: str, team_id: int) -> User:
     """Create a user belonging to the given team."""
-    user = User(username=username,
-                password_hash=hash_password(password),
-                team_id=team_id)
+    salt = secrets.token_hex(16)
+    user = User(
+        username=username,
+        password_hash=hash_password(password, salt),
+        salt=salt,
+        team_id=team_id,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -138,7 +143,7 @@ def get_user_for_login(db: Session, team_id: int, username: str, password: str):
         .filter(User.username == username, User.team_id == team_id)
         .first()
     )
-    if user and user.password_hash == hash_password(password):
+    if user and user.password_hash == hash_password(password, user.salt):
         return user
     return None
 
@@ -187,7 +192,7 @@ def create_message(
 
 def change_user_password(db: Session, user: User, new_password: str):
     """Update the user's password hash."""
-    user.password_hash = hash_password(new_password)
+    user.password_hash = hash_password(new_password, user.salt)
     db.commit()
 
 def get_active_messages(db: Session, team_id: int):
