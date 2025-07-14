@@ -49,6 +49,15 @@ sd login <teamname> <username> <password>
 The CLI stores the returned token and team name in the configuration file for
 future requests.
 
+Change your password after logging in:
+
+```bash
+sd resetpwd <old_password> <new_password> <new_password>
+```
+
+The CLI sends your stored username and token with the request so the server
+can verify your identity.
+
 Retrieve the current standup messages for your team:
 
 ```bash

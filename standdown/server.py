@@ -19,6 +19,7 @@ from .database import (
     get_user_for_login,
     get_user_by_token,
     create_message,
+    change_user_password,
 )
 
 
@@ -60,6 +61,14 @@ class MessagePost(BaseModel):
     token: str
     message: str
     flag: str | None = None
+
+
+class PasswordChange(BaseModel):
+    team_name: str
+    username: str
+    token: str
+    old_password: str
+    new_password: str
 
 
 
@@ -168,4 +177,26 @@ def get_messages_endpoint(
         for username, content, mtype, ts in messages
     ]
     return {"messages": result}
+
+
+@app.post("/resetpwd")
+def reset_password_endpoint(payload: PasswordChange, db: Session = Depends(get_db)):
+    """Change a user's password after validating token and old password."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    if user.password_hash != hash_password(payload.old_password):
+        raise HTTPException(status_code=403, detail="Invalid password")
+
+    change_user_password(db, user, payload.new_password)
+    return {"message": "Password updated"}
 
