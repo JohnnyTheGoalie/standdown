@@ -3,6 +3,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
 
 
 from .database import (
@@ -21,6 +22,7 @@ from .database import (
     create_message,
     deactivate_existing,
     change_user_password,
+    get_messages_for_day,
 )
 
 
@@ -202,6 +204,56 @@ def get_messages_endpoint(
             "timestamp": ts.isoformat(),
         }
         for username, content, mtype, ts in messages
+    ]
+    return {"messages": result}
+
+
+@app.get("/teams/{team_name}/logs")
+def get_logs_endpoint(
+    team_name: str,
+    username: str,
+    token: str,
+    date: str,
+    flag: str = "none",
+    users: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Return messages for a specific day filtered by flag and users."""
+
+    team = get_team_by_name(db, team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    if date == "today":
+        target_day = datetime.utcnow().date()
+    elif date == "yesterday":
+        target_day = datetime.utcnow().date() - timedelta(days=1)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid date")
+
+    if flag == "none":
+        flag_val = None
+    else:
+        flag_val = flag
+
+    usernames = [u for u in users.split(",") if u] if users else None
+    records = get_messages_for_day(db, team.id, target_day, flag_val, usernames)
+    result = [
+        {
+            "username": uname,
+            "content": content,
+            "msg_type": mtype,
+            "timestamp": ts.isoformat(),
+        }
+        for uname, content, mtype, ts in records
     ]
     return {"messages": result}
 

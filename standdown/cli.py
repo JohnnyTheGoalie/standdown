@@ -344,3 +344,37 @@ def show_team_cli():
         _print_section("In progress", messages)
     if blockers:
         _print_section("Blockers", blockers)
+
+
+def show_logs_cli(day: str, flag: str | None, users: list[str]):
+    """Display logs for a specific day and flag."""
+    address, port, scheme = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    team, token, username = load_login()
+    if not team or not token or not username:
+        print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
+        return
+
+    base_url = f"{scheme}://{address}:{port}/teams/{team}/logs"
+    params = {
+        "username": username,
+        "token": token,
+        "date": day,
+        "flag": flag or "none",
+    }
+    if users:
+        params["users"] = ",".join(users)
+
+    url = f"{base_url}?{parse.urlencode(params)}"
+    logs = _fetch_messages(url)
+    if not logs:
+        return
+
+    for msg in logs:
+        ts = datetime.fromisoformat(msg["timestamp"])
+        color = _color_for_user(msg["username"])
+        reset = "\033[0m"
+        print(f"{color}{msg['username']}{reset}: {msg['content']} ({ts.isoformat()})")
