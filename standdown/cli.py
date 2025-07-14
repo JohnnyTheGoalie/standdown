@@ -17,27 +17,36 @@ from .config import (
     save_login,
     load_login,
     DEFAULT_PORT,
+    DEFAULT_SCHEME,
 )
 
 
 
 def connect(address: str):
-    if ':' in address:
-        host, port_str = address.split(':', 1)
-        try:
-            port = int(port_str)
-        except ValueError:
-            print(f"[ERROR] Invalid port in address '{address}'")
-            return
+    if '://' not in address:
+        parsed = parse.urlparse(f'//{address}')
+        scheme = DEFAULT_SCHEME
     else:
-        host = address
-        port = DEFAULT_PORT
+        parsed = parse.urlparse(address)
+        scheme = parsed.scheme or DEFAULT_SCHEME
 
-    save_server(host, port)
-    if port == DEFAULT_PORT:
-        print(f"[CLIENT] Routing requests to {host}")
-    else:
-        print(f"[CLIENT] Routing requests to {host}:{port}")
+    host = parsed.hostname
+    try:
+        port = parsed.port if parsed.port is not None else DEFAULT_PORT
+    except ValueError:
+        print(f"[ERROR] Invalid port in address '{address}'")
+        return
+
+    if not host:
+        print(f"[ERROR] Invalid address '{address}'")
+        return
+
+    save_server(host, port, scheme)
+
+    display = f"{scheme}://{host}"
+    if port != DEFAULT_PORT:
+        display += f":{port}"
+    print(f"[CLIENT] Routing requests to {display}")
 
 def start_server(port: int = DEFAULT_PORT):
     print(f"[SERVER] Starting standdown FastAPI server on port {port}")
@@ -46,12 +55,12 @@ def start_server(port: int = DEFAULT_PORT):
 
 def create_team_cli(name: str, admin_password: str):
     """Send a request to create a new team on the configured server."""
-    address, port = load_server()
+    address, port, scheme = load_server()
     if not address:
         print("[ERROR] No server configured. Use 'sd conn <address>' first.")
         return
 
-    url = f"http://{address}:{port}/teams"
+    url = f"{scheme}://{address}:{port}/teams"
     data = json.dumps({"name": name, "admin_password": admin_password}).encode("utf-8")
     req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
 
@@ -73,12 +82,12 @@ def create_team_cli(name: str, admin_password: str):
 
 def signup_cli(teamname: str, admin_password: str, usernames: list[str], password: str):
     """Send a request to add users to a team."""
-    address, port = load_server()
+    address, port, scheme = load_server()
     if not address:
         print("[ERROR] No server configured. Use 'sd conn <address>' first.")
         return
 
-    url = f"http://{address}:{port}/teams/{teamname}/users"
+    url = f"{scheme}://{address}:{port}/teams/{teamname}/users"
     data = json.dumps({
         "admin_password": admin_password,
         "usernames": usernames,
@@ -103,12 +112,12 @@ def signup_cli(teamname: str, admin_password: str, usernames: list[str], passwor
 
 def login_cli(teamname: str, username: str, password: str):
     """Login a user and store the returned token."""
-    address, port = load_server()
+    address, port, scheme = load_server()
     if not address:
         print("[ERROR] No server configured. Use 'sd conn <address>' first.")
         return
 
-    url = f"http://{address}:{port}/login"
+    url = f"{scheme}://{address}:{port}/login"
     data = json.dumps({
         "team_name": teamname,
         "username": username,
@@ -142,7 +151,7 @@ def reset_password_cli(old_password: str, new_password: str, repeat: str):
         print("[ERROR] New passwords do not match")
         return
 
-    address, port = load_server()
+    address, port, scheme = load_server()
     if not address:
         print("[ERROR] No server configured. Use 'sd conn <address>' first.")
         return
@@ -152,7 +161,7 @@ def reset_password_cli(old_password: str, new_password: str, repeat: str):
         print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
         return
 
-    url = f"http://{address}:{port}/resetpwd"
+    url = f"{scheme}://{address}:{port}/resetpwd"
     data = json.dumps({
         "team_name": team,
         "username": username,
@@ -179,7 +188,7 @@ def reset_password_cli(old_password: str, new_password: str, repeat: str):
 
 def send_message_cli(message: str, flag: str | None):
     """Send a message to the server with optional flag."""
-    address, port = load_server()
+    address, port, scheme = load_server()
     if not address:
         print("[ERROR] No server configured. Use 'sd conn <address>' first.")
         return
@@ -189,7 +198,7 @@ def send_message_cli(message: str, flag: str | None):
         print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
         return
 
-    url = f"http://{address}:{port}/messages"
+    url = f"{scheme}://{address}:{port}/messages"
     data = json.dumps({
         "team_name": team,
         "username": username,
@@ -259,7 +268,7 @@ def _fetch_messages(url: str) -> list[dict]:
 
 def show_team_cli():
     """Display the team's pinned messages, standup messages and blockers."""
-    address, port = load_server()
+    address, port, scheme = load_server()
     if not address:
         print("[ERROR] No server configured. Use 'sd conn <address>' first.")
         return
@@ -269,7 +278,7 @@ def show_team_cli():
         print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
         return
 
-    base_url = f"http://{address}:{port}/teams/{team}/messages"
+    base_url = f"{scheme}://{address}:{port}/teams/{team}/messages"
     params = parse.urlencode({"username": username, "token": token})
 
     all_msgs = _fetch_messages(f"{base_url}?{params}")
