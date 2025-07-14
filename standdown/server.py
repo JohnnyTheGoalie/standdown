@@ -147,7 +147,7 @@ def get_messages_endpoint(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    messages = get_active_messages(db, team.id, msg_type)
+    messages = get_active_messages(db, team.id)
     result = [
         {
             "username": username,
