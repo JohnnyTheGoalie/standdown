@@ -49,3 +49,13 @@ sd login <teamname> <username> <password>
 The CLI stores the returned token and team name in the configuration file for
 future requests.
 
+Retrieve the current standup messages for your team:
+
+```bash
+sd team
+```
+
+This command requires that you are logged in. The CLI sends your stored
+username and token with the request so that only authenticated team members can
+view the messages.
+

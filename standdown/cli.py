@@ -1,7 +1,7 @@
 # standdown/cli.py
 
 import json
-from urllib import request
+from urllib import request, parse
 
 from colorama import init as colorama_init
 
@@ -225,13 +225,14 @@ def show_team_cli():
         return
 
     team, token, username = load_login()
-    if not team:
+    if not team or not token or not username:
         print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
         return
 
     base_url = f"http://{address}:{port}/teams/{team}/messages"
+    params = parse.urlencode({"username": username, "token": token})
 
-    all_msgs = _fetch_messages(base_url)
+    all_msgs = _fetch_messages(f"{base_url}?{params}")
     pinned = [m for m in all_msgs if m.get("msg_type") == "pin"]
     blockers = [m for m in all_msgs if m.get("msg_type") == "blockers"]
     messages = [m for m in all_msgs if m.get("msg_type") is None]
