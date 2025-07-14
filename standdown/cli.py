@@ -250,7 +250,7 @@ def deactivate_messages_cli(flag: str | None):
         with request.urlopen(req) as resp:
             body = resp.read().decode()
             if 200 <= resp.status < 300:
-                print("[CLIENT] Messages deactivated")
+                print(f"[CLIENT] Message marked as done")
             else:
                 print(f"[ERROR] Server responded with status {resp.status}: {body}")
     except Exception as exc:
