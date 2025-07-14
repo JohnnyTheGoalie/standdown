@@ -184,16 +184,30 @@ def create_message(
     db.refresh(msg)
     return msg
 def get_active_messages(db: Session, team_id: int, msg_type: str | None):
-    """Return active messages for the given team and type."""
+    """Return active messages for the given team and type.
+
+    When ``msg_type`` is ``"all"`` no filtering is applied and messages of all
+    types are returned. Otherwise ``None`` fetches unflagged messages and any
+    other string filters by that flag.
+    """
+
     query = (
-        db.query(User.username, Message.content, Message.timestamp)
+        db.query(
+            User.username,
+            Message.content,
+            Message.msg_type,
+            Message.timestamp,
+        )
         .join(Message, User.id == Message.user_id)
         .filter(Message.team_id == team_id, Message.active == True)
     )
-    if msg_type is None:
-        query = query.filter(Message.msg_type.is_(None))
-    else:
-        query = query.filter(Message.msg_type == msg_type)
+
+    if msg_type != "all":
+        if msg_type is None:
+            query = query.filter(Message.msg_type.is_(None))
+        else:
+            query = query.filter(Message.msg_type == msg_type)
+
     return query.order_by(User.username.asc()).all()
 
 

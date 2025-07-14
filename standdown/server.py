@@ -133,19 +133,29 @@ def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
 
 
 @app.get("/teams/{team_name}/messages")
-def get_messages_endpoint(team_name: str, msg_type: str | None = None, db: Session = Depends(get_db)):
-    """Return active messages for a team grouped by type."""
+def get_messages_endpoint(
+    team_name: str, msg_type: str | None = None, db: Session = Depends(get_db)
+):
+    """Return active messages for a team.
+
+    The optional ``msg_type`` query parameter can be ``None`` for regular
+    messages, a specific flag like ``"pin"`` or ``"blockers"``, or ``"all``" to
+    retrieve every active message regardless of flag.
+    """
+
     team = get_team_by_name(db, team_name)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
+
     messages = get_active_messages(db, team.id, msg_type)
     result = [
         {
             "username": username,
             "content": content,
+            "msg_type": mtype,
             "timestamp": ts.isoformat(),
         }
-        for username, content, ts in messages
+        for username, content, mtype, ts in messages
     ]
     return {"messages": result}
 
