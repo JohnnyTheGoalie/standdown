@@ -68,3 +68,13 @@ This command requires that you are logged in. The CLI sends your stored
 username and token with the request so that only authenticated team members can
 view the messages.
 
+Clear your standup messages when they no longer apply:
+
+```bash
+sd done
+sd pin done
+sd blockers done
+```
+
+Each command deactivates the corresponding message type for the logged in user.
+
