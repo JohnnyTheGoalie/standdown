@@ -10,6 +10,7 @@ from standdown.cli import (
     signup_cli,
     login_cli,
     send_message_cli,
+    deactivate_messages_cli,
     reset_password_cli,
 )
 
@@ -22,7 +23,7 @@ def main():
     # invocation as a message to post.
     known = {
         'server', 'conn', 'create', 'signup', 'login', 'msg',
-        'blockers', 'pin', 'team', 'resetpwd'
+        'blockers', 'pin', 'team', 'resetpwd', 'done'
     }
     import sys
     if len(sys.argv) > 1 and sys.argv[1] not in known:
@@ -80,6 +81,9 @@ def main():
     # Subcommand: sd team
     team_parser = subparsers.add_parser("team", help="Show team standup")
 
+    # Subcommand: sd done
+    done_parser = subparsers.add_parser('done', help='Clear your standup message')
+
     login_parser.add_argument('password', help='Password')
 
 
@@ -109,9 +113,17 @@ def main():
     elif args.command == 'msg':
         send_message_cli(args.message, 'msg')
     elif args.command == 'blockers':
-        send_message_cli(args.message, 'blockers')
+        if args.message == 'done':
+            deactivate_messages_cli('blockers')
+        else:
+            send_message_cli(args.message, 'blockers')
     elif args.command == 'pin':
-        send_message_cli(args.message, 'pin')
+        if args.message == 'done':
+            deactivate_messages_cli('pin')
+        else:
+            send_message_cli(args.message, 'pin')
+    elif args.command == 'done':
+        deactivate_messages_cli(None)
     elif args.command == 'team':
         show_team_cli()
 

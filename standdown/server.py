@@ -19,6 +19,7 @@ from .database import (
     get_user_for_login,
     get_user_by_token,
     create_message,
+    deactivate_existing,
     change_user_password,
 )
 
@@ -60,6 +61,13 @@ class MessagePost(BaseModel):
     username: str
     token: str
     message: str
+    flag: str | None = None
+
+
+class DeactivateRequest(BaseModel):
+    team_name: str
+    username: str
+    token: str
     flag: str | None = None
 
 
@@ -137,6 +145,25 @@ def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
 
     create_message(db, user.id, team.id, payload.message, payload.flag)
     return {"message": "Message posted"}
+
+
+@app.post("/messages/done")
+def deactivate_messages_endpoint(payload: DeactivateRequest, db: Session = Depends(get_db)):
+    """Mark active messages of a given type as inactive for the user."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    deactivate_existing(db, user.id, payload.flag)
+    return {"message": "Messages deactivated"}
 
 
 
