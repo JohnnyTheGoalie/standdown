@@ -109,6 +109,34 @@ def signup_cli(teamname: str, admin_password: str, usernames: list[str], passwor
             print(f"[ERROR] {exc}")
 
 
+def promote_cli(teamname: str, admin_password: str, username: str):
+    """Promote a user to manager."""
+    address, port, scheme = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    url = f"{scheme}://{address}:{port}/teams/{teamname}/manager"
+    data = json.dumps({
+        "admin_password": admin_password,
+        "username": username,
+    }).encode("utf-8")
+    req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+    try:
+        with request.urlopen(req) as resp:
+            if 200 <= resp.status < 300:
+                print("[CLIENT] User promoted")
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+
+
 
 def login_cli(teamname: str, username: str, password: str):
     """Login a user and store the returned token."""

@@ -10,6 +10,7 @@ from standdown.cli import (
     show_logs_cli,
     signup_cli,
     login_cli,
+    promote_cli,
     send_message_cli,
     deactivate_messages_cli,
     reset_password_cli,
@@ -25,7 +26,7 @@ def main():
     known = {
         'server', 'conn', 'create', 'signup', 'login', 'msg',
         'blockers', 'pin', 'team', 'resetpwd', 'done',
-        'today', 'yesterday'
+        'today', 'yesterday', 'manager'
     }
     import sys
     if len(sys.argv) > 1 and sys.argv[1] not in known:
@@ -56,6 +57,12 @@ def main():
     signup_parser.add_argument('teamname', help='Team name')
     signup_parser.add_argument('adminpwd', help='Admin password')
     signup_parser.add_argument('users', nargs='+', help='List of usernames followed by password (last arg)')
+
+    # Subcommand: sd manager <team> <adminpwd> <username>
+    manager_parser = subparsers.add_parser('manager', help='Promote a user to manager')
+    manager_parser.add_argument('teamname', help='Team name')
+    manager_parser.add_argument('adminpwd', help='Admin password')
+    manager_parser.add_argument('username', help='Username to promote')
 
 
     # Subcommand: sd login <team> <username> <password>
@@ -113,6 +120,9 @@ def main():
         usernames = args.users[:-1]
         password = args.users[-1]
         signup_cli(args.teamname, args.adminpwd, usernames, password)
+
+    elif args.command == 'manager':
+        promote_cli(args.teamname, args.adminpwd, args.username)
 
     elif args.command == 'login':
         login_cli(args.teamname, args.username, args.password)
