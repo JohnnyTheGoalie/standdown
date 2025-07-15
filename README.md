@@ -53,6 +53,12 @@ sd login <teamname> <username> <password>
 The CLI stores the returned token and team name in the configuration file for
 future requests.
 
+Logout from the app:
+
+```bash
+sd logout
+```
+
 Change your password after logging in:
 
 ```bash
