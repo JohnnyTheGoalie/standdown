@@ -28,6 +28,7 @@ from .database import (
     get_task_by_tag,
     assign_task_multiple,
     unassign_task,
+    deactivate_task,
     TaskAssignee,
     get_tasks_for_user,
     get_all_tasks,
@@ -296,6 +297,32 @@ def end_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
 
     unassign_task(db, task, user.id)
     return {"message": "Task unassigned"}
+
+
+@app.post("/tasks/remove")
+def remove_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
+    """Deactivate a task if the requester is a manager."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    if user.role != "manager":
+        raise HTTPException(status_code=403, detail="Insufficient privileges")
+
+    task = get_task_by_tag(db, team.id, payload.tag)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    deactivate_task(db, task)
+    return {"message": "Task removed"}
 
 
 @app.get("/tasks")

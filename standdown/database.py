@@ -287,6 +287,13 @@ def unassign_task(db: Session, task: Task, user_id: int):
             db.commit()
 
 
+def deactivate_task(db: Session, task: Task):
+    """Mark the task inactive and remove all assignees."""
+    task.active = False
+    db.query(TaskAssignee).filter(TaskAssignee.task_id == task.id).delete()
+    db.commit()
+
+
 def get_tasks_for_user(db: Session, team_id: int, user_id: int) -> list[Task]:
     """Return active tasks assigned to the given user in the team."""
     return (
