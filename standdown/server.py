@@ -24,6 +24,7 @@ from .database import (
     change_user_password,
     get_messages_for_day,
     set_user_role,
+    create_task,
 )
 
 
@@ -85,6 +86,13 @@ class PasswordChange(BaseModel):
 class PromoteRequest(BaseModel):
     admin_password: str
     username: str
+
+
+class TaskCreate(BaseModel):
+    team_name: str
+    username: str
+    token: str
+    task: str
 
 
 
@@ -151,6 +159,28 @@ def login_endpoint(payload: LoginRequest, db: Session = Depends(get_db)):
 
     token = create_token(db, user.id)
     return {"token": token}
+
+
+@app.post("/tasks")
+def add_task_endpoint(payload: TaskCreate, db: Session = Depends(get_db)):
+    """Create a task for a team if the user is a manager."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    if user.role != "manager":
+        raise HTTPException(status_code=403, detail="Insufficient privileges")
+
+    create_task(db, team.id, payload.task)
+    return {"message": "Task added"}
 
 
 @app.post("/messages")
