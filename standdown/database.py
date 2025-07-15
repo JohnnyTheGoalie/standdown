@@ -263,6 +263,25 @@ def assign_task_multiple(db: Session, task: Task, user_ids: list[int]):
         assign_task(db, task, uid)
 
 
+def get_tasks_for_user(db: Session, team_id: int, user_id: int) -> list[Task]:
+    """Return active tasks assigned to the given user in the team."""
+    return (
+        db.query(Task)
+        .join(TaskAssignee, Task.id == TaskAssignee.task_id)
+        .filter(
+            Task.team_id == team_id,
+            TaskAssignee.user_id == user_id,
+            Task.active == True,
+        )
+        .all()
+    )
+
+
+def get_users_in_team(db: Session, team_id: int) -> list[User]:
+    """Return all users belonging to the specified team."""
+    return db.query(User).filter(User.team_id == team_id).all()
+
+
 def change_user_password(db: Session, user: User, new_password: str):
     """Update the user's password hash."""
     user.password_hash = hash_password(new_password, user.salt)
