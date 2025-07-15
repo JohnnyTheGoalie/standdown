@@ -1,3 +1,24 @@
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "standdown"
+version = "0.1.0"
+description = "Minimal CLI and server for asynchronous standups"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "AGPL-3.0-or-later"}
+authors = [
+    { name = "Jovan Lukovic", email = "jovanlukovic001@gmail.com" }
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "SQLAlchemy",
+    "colorama"
+]
+
+[project.scripts]
+standdown = "standdown.__main__:main"
+sd = "standdown.__main__:main"
