@@ -75,6 +75,18 @@ This command requires that you are logged in. The CLI sends your stored
 username and token with the request so that only authenticated team members can
 view the messages.
 
+### Sending standup messages
+
+To post a message, simply run `sd <message>`. If your text begins with a word
+that matches a subcommand (for example `team`), prefix the message with a dot:
+
+```bash
+sd . team is on track
+```
+
+The prefix prevents the CLI from interpreting the word as a command. You can
+also use `sd msg <message>` explicitly.
+
 Clear your standup messages when they no longer apply:
 
 ```bash
