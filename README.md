@@ -133,3 +133,38 @@ Managers can remove a task by tag:
 ```bash
 sd remove <tag>
 ```
+
+Start working on a task you are assigned to:
+
+```bash
+sd start <tag>
+```
+
+Mark the task as finished when you're done:
+
+```bash
+sd end <tag>
+```
+
+### Viewing logs
+
+Display today's standup messages:
+
+```bash
+sd today
+```
+
+Display yesterday's messages for specific users:
+
+```bash
+sd yesterday alice bob
+```
+
+You can also view only blocker or pinned messages using the corresponding
+subcommands:
+
+```bash
+sd blockers today
+sd blockers yesterday alice
+sd pin today
+```
