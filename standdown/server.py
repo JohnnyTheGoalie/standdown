@@ -25,6 +25,8 @@ from .database import (
     get_messages_for_day,
     set_user_role,
     create_task,
+    get_task_by_tag,
+    assign_task,
 )
 
 
@@ -93,6 +95,14 @@ class TaskCreate(BaseModel):
     username: str
     token: str
     task: str
+
+
+class TaskAssign(BaseModel):
+    team_name: str
+    username: str
+    token: str
+    tag: str
+    assignee: str
 
 
 
@@ -179,8 +189,38 @@ def add_task_endpoint(payload: TaskCreate, db: Session = Depends(get_db)):
     if user.role != "manager":
         raise HTTPException(status_code=403, detail="Insufficient privileges")
 
-    create_task(db, team.id, payload.task)
-    return {"message": "Task added"}
+    task = create_task(db, team.id, payload.task)
+    return {"message": "Task added", "tag": task.tag}
+
+
+@app.post("/tasks/assign")
+def assign_task_endpoint(payload: TaskAssign, db: Session = Depends(get_db)):
+    """Assign a task to a user if the requester is a manager."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    assigner = get_user_in_team(db, team.id, payload.username)
+    if not assigner:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != assigner.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    if assigner.role != "manager":
+        raise HTTPException(status_code=403, detail="Insufficient privileges")
+
+    assignee = get_user_in_team(db, team.id, payload.assignee)
+    if not assignee:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    task = get_task_by_tag(db, team.id, payload.tag)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    assign_task(db, task, assignee.id)
+    return {"message": "Task assigned"}
 
 
 @app.post("/messages")

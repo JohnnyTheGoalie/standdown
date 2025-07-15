@@ -97,3 +97,19 @@ sd blockers done
 
 Each command deactivates the corresponding message type for the logged in user.
 
+### Managing tasks
+
+Managers can create tasks for the team:
+
+```bash
+sd add <task>
+```
+
+The server responds with the hexadecimal tag for the new task, which is also displayed by the CLI.
+
+Managers can assign tasks to team members using the tag:
+
+```bash
+sd assign <tag> <username>
+```
+

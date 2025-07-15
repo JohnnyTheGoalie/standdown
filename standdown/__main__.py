@@ -15,6 +15,7 @@ from standdown.cli import (
     deactivate_messages_cli,
     reset_password_cli,
     add_task_cli,
+    assign_task_cli,
 )
 
 from standdown.config import DEFAULT_PORT
@@ -27,7 +28,7 @@ def main():
     known = {
         'server', 'conn', 'create', 'signup', 'login', 'msg',
         'blockers', 'pin', 'team', 'resetpwd', 'done',
-        'today', 'yesterday', 'manager', 'add'
+        'today', 'yesterday', 'manager', 'add', 'assign'
     }
     import sys
     if len(sys.argv) > 1:
@@ -104,6 +105,10 @@ def main():
     # Subcommand: sd add <task>
     add_parser = subparsers.add_parser('add', help='Add a task')
     add_parser.add_argument('taskname', help='Task name')
+    # Subcommand: sd assign <tag> <username>
+    assign_parser = subparsers.add_parser('assign', help='Assign a task to a user')
+    assign_parser.add_argument('tag', help='Task tag')
+    assign_parser.add_argument('username', help='User to assign to')
     # Subcommand: sd team
     team_parser = subparsers.add_parser("team", help="Show team standup")
 
@@ -167,6 +172,8 @@ def main():
                 send_message_cli(' '.join(args.params), 'pin')
     elif args.command == 'add':
         add_task_cli(args.taskname)
+    elif args.command == 'assign':
+        assign_task_cli(args.tag, args.username)
     elif args.command == 'done':
         deactivate_messages_cli(None)
     elif args.command == 'team':
