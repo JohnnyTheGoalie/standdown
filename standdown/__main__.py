@@ -17,6 +17,7 @@ from standdown.cli import (
     add_task_cli,
     assign_task_cli,
     list_tasks_cli,
+    list_all_tasks_cli,
 )
 
 from standdown.config import DEFAULT_PORT
@@ -29,7 +30,7 @@ def main():
     known = {
         'server', 'conn', 'create', 'signup', 'login', 'msg',
         'blockers', 'pin', 'team', 'resetpwd', 'done',
-        'today', 'yesterday', 'manager', 'add', 'assign', 'tasks'
+        'today', 'yesterday', 'manager', 'add', 'assign', 'tasks', 'task'
     }
     import sys
     if len(sys.argv) > 1:
@@ -112,6 +113,9 @@ def main():
     assign_parser.add_argument('usernames', nargs='+', help='Users to assign to')
     # Subcommand: sd tasks
     tasks_parser = subparsers.add_parser('tasks', help='List tasks assigned to you')
+    # Subcommand: sd task .
+    task_parser = subparsers.add_parser('task', help='List all tasks for the team')
+    task_parser.add_argument('tag', help="Use '.' to list all tasks")
     # Subcommand: sd team
     team_parser = subparsers.add_parser("team", help="Show team standup")
 
@@ -179,6 +183,11 @@ def main():
         assign_task_cli(args.tag, args.usernames)
     elif args.command == 'tasks':
         list_tasks_cli()
+    elif args.command == 'task':
+        if args.tag == '.':
+            list_all_tasks_cli()
+        else:
+            print("[ERROR] Only '.' is supported for now")
     elif args.command == 'done':
         deactivate_messages_cli(None)
     elif args.command == 'team':

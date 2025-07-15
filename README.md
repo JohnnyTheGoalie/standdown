@@ -125,3 +125,9 @@ Team members can view their assigned tasks:
 sd tasks
 ```
 
+Managers can list every task for the team:
+
+```bash
+sd task .
+```
+

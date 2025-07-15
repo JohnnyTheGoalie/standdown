@@ -28,6 +28,7 @@ from .database import (
     get_task_by_tag,
     assign_task_multiple,
     get_tasks_for_user,
+    get_all_tasks,
     get_users_in_team,
 )
 
@@ -256,6 +257,37 @@ def list_tasks_endpoint(
 
     tasks = get_tasks_for_user(db, team.id, user.id)
     result = [{"tag": t.tag, "task": t.name} for t in tasks]
+    return {"tasks": result}
+
+
+@app.get("/tasks/all")
+def list_all_tasks_endpoint(
+    team_name: str,
+    username: str,
+    token: str,
+    db: Session = Depends(get_db),
+):
+    """Return all active tasks for the team if requester is a manager."""
+    team = get_team_by_name(db, team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    if user.role != "manager":
+        raise HTTPException(status_code=403, detail="Insufficient privileges")
+
+    tasks = get_all_tasks(db, team.id)
+    result = [
+        {"tag": t.tag, "task": t.name, "assignees": assignees}
+        for t, assignees in tasks
+    ]
     return {"tasks": result}
 
 
