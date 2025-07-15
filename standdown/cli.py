@@ -289,6 +289,43 @@ def deactivate_messages_cli(flag: str | None):
             print(f"[ERROR] {exc}")
 
 
+def add_task_cli(taskname: str):
+    """Add a task for the team as the logged in manager user."""
+    address, port, scheme = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    team, token, username = load_login()
+    if not team or not token or not username:
+        print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
+        return
+
+    url = f"{scheme}://{address}:{port}/tasks"
+    data = json.dumps({
+        "team_name": team,
+        "username": username,
+        "token": token,
+        "task": taskname,
+    }).encode("utf-8")
+
+    req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+    try:
+        with request.urlopen(req) as resp:
+            body = resp.read().decode()
+            if 200 <= resp.status < 300:
+                print("[CLIENT] Task added")
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}: {body}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+
+
 from datetime import datetime
 
 

@@ -76,6 +76,16 @@ class Message(Base):
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class Task(Base):
+    """Task assigned to a team."""
+
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    name = Column(String, nullable=False)
+
+
 
 def hash_password(password: str, salt: str = "") -> str:
     """Return a SHA256 hash of the provided password and salt."""
@@ -196,6 +206,15 @@ def create_message(
     db.commit()
     db.refresh(msg)
     return msg
+
+
+def create_task(db: Session, team_id: int, name: str) -> Task:
+    """Create a task for the given team."""
+    task = Task(team_id=team_id, name=name)
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return task
 
 
 def change_user_password(db: Session, user: User, new_password: str):
