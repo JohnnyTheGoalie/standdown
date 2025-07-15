@@ -85,8 +85,16 @@ class Task(Base):
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
     name = Column(String, nullable=False)
     tag = Column(String, nullable=False)
-    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
     active = Column(Boolean, default=True)
+
+
+class TaskAssignee(Base):
+    """Association table mapping tasks to assigned users."""
+
+    __tablename__ = "task_assignees"
+
+    task_id = Column(Integer, ForeignKey("tasks.id"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
 
 
 
@@ -239,8 +247,20 @@ def get_task_by_tag(db: Session, team_id: int, tag: str) -> Task | None:
 
 def assign_task(db: Session, task: Task, user_id: int):
     """Assign a task to a user."""
-    task.assigned_to = user_id
-    db.commit()
+    existing = (
+        db.query(TaskAssignee)
+        .filter(TaskAssignee.task_id == task.id, TaskAssignee.user_id == user_id)
+        .first()
+    )
+    if not existing:
+        db.add(TaskAssignee(task_id=task.id, user_id=user_id))
+        db.commit()
+
+
+def assign_task_multiple(db: Session, task: Task, user_ids: list[int]):
+    """Assign a task to multiple users."""
+    for uid in user_ids:
+        assign_task(db, task, uid)
 
 
 def change_user_password(db: Session, user: User, new_password: str):

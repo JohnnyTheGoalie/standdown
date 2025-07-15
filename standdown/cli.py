@@ -331,8 +331,8 @@ def add_task_cli(taskname: str):
             print(f"[ERROR] {exc}")
 
 
-def assign_task_cli(tag: str, assignee: str):
-    """Assign a task to a team member."""
+def assign_task_cli(tag: str, assignees: list[str]):
+    """Assign a task to one or more team members."""
     address, port, scheme = load_server()
     if not address:
         print("[ERROR] No server configured. Use 'sd conn <address>' first.")
@@ -349,7 +349,7 @@ def assign_task_cli(tag: str, assignee: str):
         "username": username,
         "token": token,
         "tag": tag,
-        "assignee": assignee,
+        "assignees": assignees,
     }).encode("utf-8")
 
     req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
