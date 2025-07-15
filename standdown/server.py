@@ -26,7 +26,7 @@ from .database import (
     set_user_role,
     create_task,
     get_task_by_tag,
-    assign_task,
+    assign_task_multiple,
 )
 
 
@@ -102,7 +102,7 @@ class TaskAssign(BaseModel):
     username: str
     token: str
     tag: str
-    assignee: str
+    assignees: list[str]
 
 
 
@@ -211,15 +211,18 @@ def assign_task_endpoint(payload: TaskAssign, db: Session = Depends(get_db)):
     if assigner.role != "manager":
         raise HTTPException(status_code=403, detail="Insufficient privileges")
 
-    assignee = get_user_in_team(db, team.id, payload.assignee)
-    if not assignee:
-        raise HTTPException(status_code=404, detail="User not found")
+    assignee_ids = []
+    for assignee_name in payload.assignees:
+        user_obj = get_user_in_team(db, team.id, assignee_name)
+        if not user_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+        assignee_ids.append(user_obj.id)
 
     task = get_task_by_tag(db, team.id, payload.tag)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    assign_task(db, task, assignee.id)
+    assign_task_multiple(db, task, assignee_ids)
     return {"message": "Task assigned"}
 
 

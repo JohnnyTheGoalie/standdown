@@ -106,9 +106,9 @@ def main():
     add_parser = subparsers.add_parser('add', help='Add a task')
     add_parser.add_argument('taskname', help='Task name')
     # Subcommand: sd assign <tag> <username>
-    assign_parser = subparsers.add_parser('assign', help='Assign a task to a user')
+    assign_parser = subparsers.add_parser('assign', help='Assign a task to users')
     assign_parser.add_argument('tag', help='Task tag')
-    assign_parser.add_argument('username', help='User to assign to')
+    assign_parser.add_argument('usernames', nargs='+', help='Users to assign to')
     # Subcommand: sd team
     team_parser = subparsers.add_parser("team", help="Show team standup")
 
@@ -173,7 +173,7 @@ def main():
     elif args.command == 'add':
         add_task_cli(args.taskname)
     elif args.command == 'assign':
-        assign_task_cli(args.tag, args.username)
+        assign_task_cli(args.tag, args.usernames)
     elif args.command == 'done':
         deactivate_messages_cli(None)
     elif args.command == 'team':

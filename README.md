@@ -107,9 +107,9 @@ sd add <task>
 
 The server responds with the hexadecimal tag for the new task, which is also displayed by the CLI.
 
-Managers can assign tasks to team members using the tag:
+Managers can assign tasks to multiple team members using the tag:
 
 ```bash
-sd assign <tag> <username>
+sd assign <tag> <user1> [<user2> ...]
 ```
 
