@@ -30,7 +30,6 @@ sd create <teamname> <adminpwd>
 The admin password is stored hashed in the server database. Attempting
 to create a team that already exists will result in an error message.
 
-
 Add users to a team (the last argument is the password for all users):
 
 ```bash
@@ -44,8 +43,6 @@ Promote an existing user to manager:
 ```bash
 sd manager <teamname> <adminpwd> <username>
 ```
-
-
 
 Login as a user to receive an authentication token:
 
@@ -128,6 +125,5 @@ sd tasks
 Managers can list every task for the team:
 
 ```bash
-sd task .
+sd list
 ```
-
