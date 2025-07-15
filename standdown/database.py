@@ -84,6 +84,9 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
     name = Column(String, nullable=False)
+    tag = Column(String, nullable=False)
+    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
+    active = Column(Boolean, default=True)
 
 
 
@@ -208,13 +211,36 @@ def create_message(
     return msg
 
 
+def _next_task_tag(db: Session, team_id: int) -> str:
+    """Return the next sequential hex tag for a team."""
+    tags = [int(t.tag, 16) for t in db.query(Task).filter(Task.team_id == team_id).all()]
+    next_num = max(tags) + 1 if tags else 1
+    return format(next_num, "x")
+
+
 def create_task(db: Session, team_id: int, name: str) -> Task:
     """Create a task for the given team."""
-    task = Task(team_id=team_id, name=name)
+    tag = _next_task_tag(db, team_id)
+    task = Task(team_id=team_id, name=name, tag=tag, active=True)
     db.add(task)
     db.commit()
     db.refresh(task)
     return task
+
+
+def get_task_by_tag(db: Session, team_id: int, tag: str) -> Task | None:
+    """Retrieve a task by its tag within a team."""
+    return (
+        db.query(Task)
+        .filter(Task.team_id == team_id, Task.tag == tag)
+        .first()
+    )
+
+
+def assign_task(db: Session, task: Task, user_id: int):
+    """Assign a task to a user."""
+    task.assigned_to = user_id
+    db.commit()
 
 
 def change_user_password(db: Session, user: User, new_password: str):

@@ -315,7 +315,50 @@ def add_task_cli(taskname: str):
         with request.urlopen(req) as resp:
             body = resp.read().decode()
             if 200 <= resp.status < 300:
-                print("[CLIENT] Task added")
+                data = json.loads(body)
+                tag = data.get("tag")
+                if tag:
+                    print(f"[CLIENT] Task added [{tag}]")
+                else:
+                    print("[CLIENT] Task added")
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}: {body}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+
+
+def assign_task_cli(tag: str, assignee: str):
+    """Assign a task to a team member."""
+    address, port, scheme = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    team, token, username = load_login()
+    if not team or not token or not username:
+        print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
+        return
+
+    url = f"{scheme}://{address}:{port}/tasks/assign"
+    data = json.dumps({
+        "team_name": team,
+        "username": username,
+        "token": token,
+        "tag": tag,
+        "assignee": assignee,
+    }).encode("utf-8")
+
+    req = request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+    try:
+        with request.urlopen(req) as resp:
+            body = resp.read().decode()
+            if 200 <= resp.status < 300:
+                print("[CLIENT] Task assigned")
             else:
                 print(f"[ERROR] Server responded with status {resp.status}: {body}")
     except Exception as exc:
