@@ -23,6 +23,7 @@ from .database import (
     deactivate_existing,
     change_user_password,
     get_messages_for_day,
+    set_user_role,
 )
 
 
@@ -81,6 +82,11 @@ class PasswordChange(BaseModel):
     new_password: str
 
 
+class PromoteRequest(BaseModel):
+    admin_password: str
+    username: str
+
+
 
 @app.post("/teams")
 def create_team_endpoint(payload: TeamCreate, db: Session = Depends(get_db)):
@@ -111,6 +117,24 @@ def create_users_endpoint(team_name: str, payload: UsersCreate, db: Session = De
         created.append(user.username)
 
     return {"message": "Users created", "users": created}
+
+
+@app.post("/teams/{team_name}/manager")
+def promote_user_endpoint(team_name: str, payload: PromoteRequest, db: Session = Depends(get_db)):
+    """Promote an existing user to manager role."""
+    team = get_team_by_name(db, team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    if team.admin_hash != hash_password(payload.admin_password):
+        raise HTTPException(status_code=403, detail="Invalid admin password")
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    set_user_role(db, user, "manager")
+    return {"message": "User promoted"}
 
 
 

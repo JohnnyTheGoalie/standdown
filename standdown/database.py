@@ -48,6 +48,7 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     salt = Column(String, nullable=False)
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    role = Column(String, default="basic", nullable=False)
 
 
 
@@ -110,7 +111,13 @@ def get_user_in_team(db: Session, team_id: int, username: str):
     )
 
 
-def create_user(db: Session, username: str, password: str, team_id: int) -> User:
+def create_user(
+    db: Session,
+    username: str,
+    password: str,
+    team_id: int,
+    role: str = "basic",
+) -> User:
     """Create a user belonging to the given team."""
     salt = secrets.token_hex(16)
     user = User(
@@ -118,6 +125,7 @@ def create_user(db: Session, username: str, password: str, team_id: int) -> User
         password_hash=hash_password(password, salt),
         salt=salt,
         team_id=team_id,
+        role=role,
     )
     db.add(user)
     db.commit()
@@ -193,6 +201,12 @@ def create_message(
 def change_user_password(db: Session, user: User, new_password: str):
     """Update the user's password hash."""
     user.password_hash = hash_password(new_password, user.salt)
+    db.commit()
+
+
+def set_user_role(db: Session, user: User, role: str):
+    """Update the user's role."""
+    user.role = role
     db.commit()
 
 def get_active_messages(db: Session, team_id: int):

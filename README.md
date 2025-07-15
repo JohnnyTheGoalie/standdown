@@ -39,6 +39,13 @@ sd signup <teamname> <adminpwd> <user1> [<user2> ...] <password>
 
 User passwords are stored hashed with a unique salt in the server database.
 
+Promote an existing user to manager:
+
+```bash
+sd manager <teamname> <adminpwd> <username>
+```
+
+
 
 Login as a user to receive an authentication token:
 
