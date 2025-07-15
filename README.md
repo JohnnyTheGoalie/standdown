@@ -127,3 +127,9 @@ Managers can list every task for the team:
 ```bash
 sd list
 ```
+
+Managers can remove a task by tag:
+
+```bash
+sd remove <tag>
+```

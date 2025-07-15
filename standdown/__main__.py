@@ -20,6 +20,7 @@ from standdown.cli import (
     list_all_tasks_cli,
     start_task_cli,
     end_task_cli,
+    remove_task_cli,
 )
 
 from standdown.config import DEFAULT_PORT
@@ -33,7 +34,7 @@ def main():
         'server', 'conn', 'create', 'signup', 'login', 'msg',
         'blockers', 'pin', 'team', 'resetpwd', 'done',
         'today', 'yesterday', 'manager', 'add', 'assign', 'tasks', 'list',
-        'start', 'end'
+        'start', 'end', 'remove'
     }
     import sys
     if len(sys.argv) > 1:
@@ -124,6 +125,9 @@ def main():
     # Subcommand: sd end <tag>
     end_parser = subparsers.add_parser('end', help='Finish a task')
     end_parser.add_argument('tag', help='Task tag')
+    # Subcommand: sd remove <tag>
+    remove_parser = subparsers.add_parser('remove', help='Remove a task')
+    remove_parser.add_argument('tag', help='Task tag')
     # Subcommand: sd team
     team_parser = subparsers.add_parser("team", help="Show team standup")
 
@@ -193,6 +197,8 @@ def main():
         start_task_cli(args.tag)
     elif args.command == 'end':
         end_task_cli(args.tag)
+    elif args.command == 'remove':
+        remove_task_cli(args.tag)
     elif args.command == 'tasks':
         list_tasks_cli()
     elif args.command == 'list':
