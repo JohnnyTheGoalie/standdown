@@ -27,6 +27,8 @@ from .database import (
     create_task,
     get_task_by_tag,
     assign_task_multiple,
+    unassign_task,
+    TaskAssignee,
     get_tasks_for_user,
     get_all_tasks,
     get_users_in_team,
@@ -106,6 +108,13 @@ class TaskAssign(BaseModel):
     token: str
     tag: str
     assignees: list[str]
+
+
+class TaskAction(BaseModel):
+    team_name: str
+    username: str
+    token: str
+    tag: str
 
 
 
@@ -233,6 +242,60 @@ def assign_task_endpoint(payload: TaskAssign, db: Session = Depends(get_db)):
 
     assign_task_multiple(db, task, assignee_ids)
     return {"message": "Task assigned"}
+
+
+@app.post("/tasks/start")
+def start_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
+    """Post the task name as a message for the user."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    task = get_task_by_tag(db, team.id, payload.tag)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # ensure the user is assigned to this task
+    assigned = db.query(TaskAssignee).filter(
+        TaskAssignee.task_id == task.id,
+        TaskAssignee.user_id == user.id,
+    ).first()
+    if not assigned:
+        raise HTTPException(status_code=403, detail="Task not assigned")
+
+    create_message(db, user.id, team.id, task.name, None)
+    return {"message": "Task started"}
+
+
+@app.post("/tasks/end")
+def end_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
+    """Unassign the task from the requesting user."""
+    team = get_team_by_name(db, payload.team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, payload.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, payload.token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    task = get_task_by_tag(db, team.id, payload.tag)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    unassign_task(db, task, user.id)
+    return {"message": "Task unassigned"}
 
 
 @app.get("/tasks")
