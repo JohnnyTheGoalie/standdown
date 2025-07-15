@@ -263,6 +263,30 @@ def assign_task_multiple(db: Session, task: Task, user_ids: list[int]):
         assign_task(db, task, uid)
 
 
+def unassign_task(db: Session, task: Task, user_id: int):
+    """Remove an assignee from a task and deactivate if none remain."""
+    entry = (
+        db.query(TaskAssignee)
+        .filter(
+            TaskAssignee.task_id == task.id,
+            TaskAssignee.user_id == user_id,
+        )
+        .first()
+    )
+    if entry:
+        db.delete(entry)
+        db.commit()
+        # deactivate the task if no assignees remain
+        remaining = (
+            db.query(TaskAssignee)
+            .filter(TaskAssignee.task_id == task.id)
+            .first()
+        )
+        if not remaining:
+            task.active = False
+            db.commit()
+
+
 def get_tasks_for_user(db: Session, team_id: int, user_id: int) -> list[Task]:
     """Return active tasks assigned to the given user in the team."""
     return (

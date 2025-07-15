@@ -18,6 +18,8 @@ from standdown.cli import (
     assign_task_cli,
     list_tasks_cli,
     list_all_tasks_cli,
+    start_task_cli,
+    end_task_cli,
 )
 
 from standdown.config import DEFAULT_PORT
@@ -30,7 +32,8 @@ def main():
     known = {
         'server', 'conn', 'create', 'signup', 'login', 'msg',
         'blockers', 'pin', 'team', 'resetpwd', 'done',
-        'today', 'yesterday', 'manager', 'add', 'assign', 'tasks', 'list'
+        'today', 'yesterday', 'manager', 'add', 'assign', 'tasks', 'list',
+        'start', 'end'
     }
     import sys
     if len(sys.argv) > 1:
@@ -115,6 +118,12 @@ def main():
     tasks_parser = subparsers.add_parser('tasks', help='List tasks assigned to you')
     # Subcommand: sd list
     list_parser = subparsers.add_parser('list', help='List all tasks for the team')
+    # Subcommand: sd start <tag>
+    start_parser = subparsers.add_parser('start', help='Start a task')
+    start_parser.add_argument('tag', help='Task tag')
+    # Subcommand: sd end <tag>
+    end_parser = subparsers.add_parser('end', help='Finish a task')
+    end_parser.add_argument('tag', help='Task tag')
     # Subcommand: sd team
     team_parser = subparsers.add_parser("team", help="Show team standup")
 
@@ -180,6 +189,10 @@ def main():
         add_task_cli(args.taskname)
     elif args.command == 'assign':
         assign_task_cli(args.tag, args.usernames)
+    elif args.command == 'start':
+        start_task_cli(args.tag)
+    elif args.command == 'end':
+        end_task_cli(args.tag)
     elif args.command == 'tasks':
         list_tasks_cli()
     elif args.command == 'list':
