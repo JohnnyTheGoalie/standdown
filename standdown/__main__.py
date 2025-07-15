@@ -29,10 +29,15 @@ def main():
         'today', 'yesterday', 'manager'
     }
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] not in known:
-        message = ' '.join(sys.argv[1:])
-        send_message_cli(message, None)
-        return
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '.':
+            message = ' '.join(sys.argv[2:])
+            send_message_cli(message, None)
+            return
+        if sys.argv[1] not in known:
+            message = ' '.join(sys.argv[1:])
+            send_message_cli(message, None)
+            return
 
     parser = argparse.ArgumentParser(prog='sd', description='standdown CLI')
 
