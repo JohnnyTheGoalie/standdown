@@ -44,3 +44,10 @@ def save_login(team: str, token: str, username: str):
 def load_login():
     data = _read()
     return data.get("team"), data.get("token"), data.get("username")
+
+def clear_login():
+    data = _read()
+    data["team"] = None
+    data["token"] = None
+    data["username"] = None
+    _write(data)

@@ -10,6 +10,7 @@ from standdown.cli import (
     show_logs_cli,
     signup_cli,
     login_cli,
+    logout_cli,
     promote_cli,
     send_message_cli,
     deactivate_messages_cli,
@@ -31,7 +32,7 @@ def main():
     # If the first argument is not a known subcommand, treat the entire
     # invocation as a message to post.
     known = {
-        'server', 'conn', 'create', 'signup', 'login', 'msg',
+        'server', 'conn', 'create', 'signup', 'login', 'logout', 'msg',
         'blockers', 'pin', 'team', 'resetpwd', 'done',
         'today', 'yesterday', 'manager', 'add', 'assign', 'tasks', 'list',
         'start', 'end', 'remove'
@@ -82,6 +83,9 @@ def main():
     login_parser = subparsers.add_parser('login', help='Login as a user')
     login_parser.add_argument('teamname', help='Team name')
     login_parser.add_argument('username', help='Username')
+
+    # Subcommand: sd logout
+    logout_parser = subparsers.add_parser('logout', help='Logout from the current user')
 
     # Subcommand: sd resetpwd <old> <new> <new>
     reset_parser = subparsers.add_parser('resetpwd', help='Change your password')
@@ -160,6 +164,8 @@ def main():
     elif args.command == 'login':
         login_cli(args.teamname, args.username, args.password)
 
+    elif args.command == 'logout':
+        logout_cli()
     elif args.command == 'resetpwd':
         reset_password_cli(args.old, args.new, args.new2)
 

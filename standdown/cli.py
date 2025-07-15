@@ -16,6 +16,7 @@ from .config import (
     load_server,
     save_login,
     load_login,
+    clear_login,
     DEFAULT_PORT,
     DEFAULT_SCHEME,
 )
@@ -172,6 +173,13 @@ def login_cli(teamname: str, username: str, password: str):
         except Exception:
             print(f"[ERROR] {exc}")
 
+def logout_cli():
+    try:
+        clear_login()
+        print("[CLIENT] Logged out")
+    except Exception as exc:
+        print(f"[ERROR] Failed to log out: {exc}")
+        return
 
 def reset_password_cli(old_password: str, new_password: str, repeat: str):
     """Change the logged in user's password."""
