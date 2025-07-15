@@ -369,6 +369,47 @@ def assign_task_cli(tag: str, assignees: list[str]):
             print(f"[ERROR] {exc}")
 
 
+def list_tasks_cli():
+    """Retrieve and display tasks assigned to the logged in user."""
+    address, port, scheme = load_server()
+    if not address:
+        print("[ERROR] No server configured. Use 'sd conn <address>' first.")
+        return
+
+    team, token, username = load_login()
+    if not team or not token or not username:
+        print("[ERROR] Not logged in. Use 'sd login <team> <username> <password>' first.")
+        return
+
+    params = parse.urlencode({
+        "team_name": team,
+        "username": username,
+        "token": token,
+    })
+    url = f"{scheme}://{address}:{port}/tasks?{params}"
+    req = request.Request(url)
+
+    try:
+        with request.urlopen(req) as resp:
+            body = resp.read().decode()
+            if 200 <= resp.status < 300:
+                data = json.loads(body)
+                tasks = data.get("tasks", [])
+                if not tasks:
+                    print("[CLIENT] No tasks assigned")
+                else:
+                    for t in tasks:
+                        print(f"[{t['tag']}] {t['task']}")
+            else:
+                print(f"[ERROR] Server responded with status {resp.status}: {body}")
+    except Exception as exc:
+        try:
+            body = exc.read().decode()
+            print(f"[ERROR] {body}")
+        except Exception:
+            print(f"[ERROR] {exc}")
+
+
 from datetime import datetime
 
 

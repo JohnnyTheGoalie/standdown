@@ -27,6 +27,8 @@ from .database import (
     create_task,
     get_task_by_tag,
     assign_task_multiple,
+    get_tasks_for_user,
+    get_users_in_team,
 )
 
 
@@ -212,11 +214,17 @@ def assign_task_endpoint(payload: TaskAssign, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Insufficient privileges")
 
     assignee_ids = []
-    for assignee_name in payload.assignees:
-        user_obj = get_user_in_team(db, team.id, assignee_name)
-        if not user_obj:
-            raise HTTPException(status_code=404, detail="User not found")
-        assignee_ids.append(user_obj.id)
+    assignee_names = payload.assignees
+    if assignee_names == ["."]:
+        assignee_objs = get_users_in_team(db, team.id)
+    else:
+        assignee_objs = []
+        for assignee_name in assignee_names:
+            user_obj = get_user_in_team(db, team.id, assignee_name)
+            if not user_obj:
+                raise HTTPException(status_code=404, detail="User not found")
+            assignee_objs.append(user_obj)
+    assignee_ids = [u.id for u in assignee_objs]
 
     task = get_task_by_tag(db, team.id, payload.tag)
     if not task:
@@ -224,6 +232,31 @@ def assign_task_endpoint(payload: TaskAssign, db: Session = Depends(get_db)):
 
     assign_task_multiple(db, task, assignee_ids)
     return {"message": "Task assigned"}
+
+
+@app.get("/tasks")
+def list_tasks_endpoint(
+    team_name: str,
+    username: str,
+    token: str,
+    db: Session = Depends(get_db),
+):
+    """Return active tasks assigned to the requesting user."""
+    team = get_team_by_name(db, team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    user = get_user_in_team(db, team.id, username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    token_user = get_user_by_token(db, token)
+    if not token_user or token_user.id != user.id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    tasks = get_tasks_for_user(db, team.id, user.id)
+    result = [{"tag": t.tag, "task": t.name} for t in tasks]
+    return {"tasks": result}
 
 
 @app.post("/messages")

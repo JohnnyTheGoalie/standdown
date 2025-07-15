@@ -113,3 +113,15 @@ Managers can assign tasks to multiple team members using the tag:
 sd assign <tag> <user1> [<user2> ...]
 ```
 
+To assign a task to everyone on the team, use a single dot as the username:
+
+```bash
+sd assign <tag> .
+```
+
+Team members can view their assigned tasks:
+
+```bash
+sd tasks
+```
+
