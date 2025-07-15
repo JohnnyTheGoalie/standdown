@@ -277,6 +277,29 @@ def get_tasks_for_user(db: Session, team_id: int, user_id: int) -> list[Task]:
     )
 
 
+def get_all_tasks(db: Session, team_id: int) -> list[tuple[Task, list[str]]]:
+    """Return all active tasks for the team with their assignees."""
+    tasks = (
+        db.query(Task)
+        .filter(Task.team_id == team_id, Task.active == True)
+        .all()
+    )
+
+    result: list[tuple[Task, list[str]]] = []
+    for task in tasks:
+        assignees = [
+            username
+            for (username,) in (
+                db.query(User.username)
+                .join(TaskAssignee, User.id == TaskAssignee.user_id)
+                .filter(TaskAssignee.task_id == task.id)
+                .all()
+            )
+        ]
+        result.append((task, assignees))
+    return result
+
+
 def get_users_in_team(db: Session, team_id: int) -> list[User]:
     """Return all users belonging to the specified team."""
     return db.query(User).filter(User.team_id == team_id).all()
