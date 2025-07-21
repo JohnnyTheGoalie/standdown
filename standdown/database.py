@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Text,
+    UniqueConstraint,
 )
 from datetime import datetime, timedelta, date
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
@@ -42,9 +43,10 @@ class User(Base):
     """Database model for a user belonging to a team."""
 
     __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("username", "team_id"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     salt = Column(String, nullable=False)
     team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
