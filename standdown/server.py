@@ -118,6 +118,32 @@ class TaskAction(BaseModel):
     tag: str
 
 
+def _require_team(db: Session, team_name: str):
+    team = get_team_by_name(db, team_name)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return team
+
+
+def _require_user(db: Session, team_id: int, username: str):
+    user = get_user_in_team(db, team_id, username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+def _require_token(db: Session, token: str, user_id: int):
+    token_user = get_user_by_token(db, token)
+    if not token_user or token_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+
+def _verify_team_user_token(db: Session, team_name: str, username: str, token: str):
+    """Validate team name, username and token returning team and user objects."""
+    team = _require_team(db, team_name)
+    user = _require_user(db, team.id, username)
+    _require_token(db, token, user.id)
+    return team, user
 
 @app.post("/teams")
 def create_team_endpoint(payload: TeamCreate, db: Session = Depends(get_db)):
@@ -187,17 +213,9 @@ def login_endpoint(payload: LoginRequest, db: Session = Depends(get_db)):
 @app.post("/tasks")
 def add_task_endpoint(payload: TaskCreate, db: Session = Depends(get_db)):
     """Create a task for a team if the user is a manager."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, payload.username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     if user.role != "manager":
         raise HTTPException(status_code=403, detail="Insufficient privileges")
@@ -209,17 +227,9 @@ def add_task_endpoint(payload: TaskCreate, db: Session = Depends(get_db)):
 @app.post("/tasks/assign")
 def assign_task_endpoint(payload: TaskAssign, db: Session = Depends(get_db)):
     """Assign a task to a user if the requester is a manager."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    assigner = get_user_in_team(db, team.id, payload.username)
-    if not assigner:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != assigner.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, assigner = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     if assigner.role != "manager":
         raise HTTPException(status_code=403, detail="Insufficient privileges")
@@ -248,17 +258,9 @@ def assign_task_endpoint(payload: TaskAssign, db: Session = Depends(get_db)):
 @app.post("/tasks/start")
 def start_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
     """Post the task name as a message for the user."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, payload.username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     task = get_task_by_tag(db, team.id, payload.tag)
     if not task:
@@ -279,17 +281,9 @@ def start_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
 @app.post("/tasks/end")
 def end_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
     """Unassign the task from the requesting user."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, payload.username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     task = get_task_by_tag(db, team.id, payload.tag)
     if not task:
@@ -302,17 +296,9 @@ def end_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
 @app.post("/tasks/remove")
 def remove_task_endpoint(payload: TaskAction, db: Session = Depends(get_db)):
     """Deactivate a task if the requester is a manager."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, payload.username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     if user.role != "manager":
         raise HTTPException(status_code=403, detail="Insufficient privileges")
@@ -333,17 +319,7 @@ def list_tasks_endpoint(
     db: Session = Depends(get_db),
 ):
     """Return active tasks assigned to the requesting user."""
-    team = get_team_by_name(db, team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(db, team_name, username, token)
 
     tasks = get_tasks_for_user(db, team.id, user.id)
     result = [{"tag": t.tag, "task": t.name} for t in tasks]
@@ -358,17 +334,7 @@ def list_all_tasks_endpoint(
     db: Session = Depends(get_db),
 ):
     """Return all active tasks for the team if requester is a manager."""
-    team = get_team_by_name(db, team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(db, team_name, username, token)
 
     if user.role != "manager":
         raise HTTPException(status_code=403, detail="Insufficient privileges")
@@ -384,18 +350,9 @@ def list_all_tasks_endpoint(
 @app.post("/messages")
 def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
     """Create a message for a user after validating token."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-
-    user = get_user_in_team(db, team.id, payload.username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     create_message(db, user.id, team.id, payload.message, payload.flag)
     return {"message": "Message posted"}
@@ -404,17 +361,9 @@ def post_message_endpoint(payload: MessagePost, db: Session = Depends(get_db)):
 @app.post("/messages/done")
 def deactivate_messages_endpoint(payload: DeactivateRequest, db: Session = Depends(get_db)):
     """Mark active messages of a given type as inactive for the user."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, payload.username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     deactivate_existing(db, user.id, payload.flag)
     return {"message": "Messages deactivated"}
@@ -435,17 +384,7 @@ def get_messages_endpoint(
     retrieve every active message regardless of flag.
     """
 
-    team = get_team_by_name(db, team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(db, team_name, username, token)
 
     messages = get_active_messages(db, team.id)
     result = [
@@ -472,17 +411,7 @@ def get_logs_endpoint(
 ):
     """Return messages for a specific day filtered by flag and users."""
 
-    team = get_team_by_name(db, team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(db, team_name, username, token)
 
     if date == "today":
         target_day = datetime.utcnow().date()
@@ -513,17 +442,9 @@ def get_logs_endpoint(
 @app.post("/resetpwd")
 def reset_password_endpoint(payload: PasswordChange, db: Session = Depends(get_db)):
     """Change a user's password after validating token and old password."""
-    team = get_team_by_name(db, payload.team_name)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
-    user = get_user_in_team(db, team.id, payload.username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    token_user = get_user_by_token(db, payload.token)
-    if not token_user or token_user.id != user.id:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    team, user = _verify_team_user_token(
+        db, payload.team_name, payload.username, payload.token
+    )
 
     if user.password_hash != hash_password(payload.old_password):
         raise HTTPException(status_code=403, detail="Invalid password")
